@@ -1,0 +1,23 @@
+// utils/parseToc.ts
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import { visit } from "unist-util-visit";
+
+export interface TocItem {
+  id: string;
+  text: string;
+  depth: number;
+}
+
+export function extractToc(markdown: string): TocItem[] {
+  const tree = unified().use(remarkParse).parse(markdown);
+  const toc: TocItem[] = [];
+
+  visit(tree, "heading", (node: any) => {
+    const text = node.children.map((c: any) => c.value).join("");
+    const id = text.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
+    toc.push({ id, text, depth: node.depth });
+  });
+
+  return toc;
+}
