@@ -13,8 +13,8 @@ export const navMain = [
         url: "/",
       },
       {
-        title: "History",
-        url: "#",
+        title: "Editor",
+        url: "/edit",
       },
       {
         title: "Starred",
@@ -66,3 +66,55 @@ asca\\
 ~~AAX~~
   `,
 };
+
+export const mdContent = `
+# Welcome to the Documentation!
+
+This is **bold** text and this is *italic* text.
+
+## Installation
+
+Run the following command:
+
+\`\`\`bash
+npm install my-library
+\`\`\`
+
+## Usage
+
+Here's how you use it:
+
+\`\`\`tsx
+import { Button } from "my-library";
+
+function App() {
+  return <Button />;
+}
+\`\`\`
+
+## Features
+
+- Easy to use
+- TypeScript support
+- Customizable components
+
+## Table Example
+
+| Name    | Age |
+|---------|-----|
+| Alice   | 25  |
+| Bob     | 30  |
+
+## Task List
+
+- [x] Install library
+- [ ] Write documentation
+
+## Strikethrough
+
+~~This feature was removed.~~
+
+## Hello Heading
+
+Clicking this heading should generate an anchor link!
+`;

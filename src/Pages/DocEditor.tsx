@@ -2,8 +2,9 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import "highlight.js/styles/github.css";
-import { TiptapEditor } from "./TiptapEditor";
+import { TiptapEditor, TiptapEditorHtmlOutput } from "./TiptapEditor";
 import { useState } from "react";
+import MyEditor from "./TestTTEditor";
 
 export const DocEditor = () => {
   const [title, setTitle] = useState("");
@@ -42,6 +43,9 @@ export const DocEditor = () => {
 
         <h1 className="text-2xl font-bold mb-6">📝 Markdown Editor</h1>
         <TiptapEditor onChangeMarkdown={(value) => setContent(value)} />
+        {/* <TiptapEditorHtmlOutput onChangeHtml={(value) => setContent(value)} /> */}
+
+        <MyEditor />
 
         <Button className="mt-4" onClick={handleSubmit}>
           Save

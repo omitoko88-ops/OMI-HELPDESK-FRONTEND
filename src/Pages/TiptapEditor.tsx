@@ -1,4 +1,3 @@
-// components/TiptapEditor.tsx
 import {
   useEditor,
   EditorContent,
@@ -11,6 +10,13 @@ import { useEffect, useState } from "react";
 import { Toolbar } from "./Toolbar";
 import { MarkdownPreview } from "./MarkdownPreview";
 import Image from "@tiptap/extension-image";
+import Table from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import TextAlign from "@tiptap/extension-text-align";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
 
 export const TiptapEditor = ({
   onChangeMarkdown,
@@ -23,6 +29,17 @@ export const TiptapEditor = ({
     extensions: [
       StarterKit,
       Image,
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      TaskList,
+      TaskItem,
       Markdown.configure({
         html: true,
         tightLists: true,
@@ -34,11 +51,17 @@ export const TiptapEditor = ({
       const md = editor.storage.markdown.getMarkdown();
       setMarkdown(md);
       onChangeMarkdown?.(md);
+
+      // const json = editor.getJSON();
+      // const markdown = customMarkdownExport(json);
+      // console.log(markdown);
+      // setMarkdown(markdown);
+      // onChangeMarkdown?.(markdown);
     },
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
       <div>
         <Toolbar editor={editor} />
         {editor && (
@@ -55,14 +78,140 @@ export const TiptapEditor = ({
             </BubbleMenu>
           </>
         )}
-        <div className="border rounded-md p-2 min-h-[300px] bg-background">
-          <EditorContent editor={editor} />
+        <div className=" rounded-md p-2 min-h-[300px] bg-background">
+          <EditorContent editor={editor} role="presentation" className="" />
         </div>
       </div>
       <div className="p-4 border rounded-md bg-muted whitespace-pre-wrap overflow-auto">
         <h2 className="text-lg font-bold mb-2">Markdown Output</h2>
         <pre className="text-sm">{markdown}</pre>
         <MarkdownPreview markdown={markdown} />
+      </div>
+    </div>
+  );
+};
+
+function customMarkdownExport(json: any): string {
+  let md = "";
+
+  const processContent = (content: any[]) =>
+    content
+      .map((node) => {
+        const text = node.text || "";
+        if (!node.marks) return text;
+
+        return node.marks.reduce((acc: any, mark: { type: any }) => {
+          switch (mark.type) {
+            case "bold":
+              return `**${acc}**`;
+            case "italic":
+              return `*${acc}*`;
+            case "strike":
+              return `~~${acc}~~`;
+            default:
+              return acc;
+          }
+        }, text);
+      })
+      .join("");
+
+  const walk = (nodes: any[]) => {
+    for (const node of nodes) {
+      switch (node.type) {
+        case "heading":
+          md += `${"#".repeat(node.attrs.level)} ${processContent(
+            node.content || []
+          )}\n\n`;
+          break;
+        case "paragraph":
+          const textAlign = node.attrs?.textAlign;
+          const paraText = processContent(node.content || []);
+
+          if (textAlign === "center") {
+            md += `::center\n${paraText}\n::\n\n`;
+          } else {
+            md += `${paraText}\n\n`;
+          }
+          break;
+        case "bulletList":
+          node.content?.forEach((li: any) => {
+            md += `- ${processContent(li.content?.[0]?.content || [])}\n`;
+          });
+          md += "\n";
+          break;
+        case "orderedList":
+          node.content?.forEach((li: any, i: number) => {
+            md += `${i + 1}. ${processContent(
+              li.content?.[0]?.content || []
+            )}\n`;
+          });
+          md += "\n";
+          break;
+        case "taskList":
+          node.content?.forEach((item: any) => {
+            const checked = item.attrs.checked ? "x" : " ";
+            md += `- [${checked}] ${processContent(
+              item.content?.[0]?.content || []
+            )}\n`;
+          });
+          md += "\n";
+          break;
+        default:
+          console.warn("Unhandled type:", node.type);
+      }
+    }
+  };
+
+  walk(json.content || []);
+  return md.trim();
+}
+
+
+//! HTML OUTPUT TIPTAP EDITOR
+export const TiptapEditorHtmlOutput = ({
+  onChangeHtml,
+}: {
+  onChangeHtml: (val: string) => void;
+}) => {
+  const [html, setHtml] = useState("");
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      Image,
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      TaskList,
+      TaskItem,
+    ],
+    content: "<h1>Hello HTML 👋</h1>",
+    onUpdate({ editor }) {
+      const html = editor.getHTML();
+      setHtml(html);
+      onChangeHtml?.(html);
+    },
+  });
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+      <div>
+        <Toolbar editor={editor} />
+        <EditorContent editor={editor} />
+      </div>
+      <div className="p-4 border rounded-md bg-muted whitespace-pre-wrap overflow-auto">
+        <h2 className="text-lg font-bold mb-2">HTML Output</h2>
+        <pre className="text-sm">{html}</pre>
+        <div
+          dangerouslySetInnerHTML={{ __html: html }}
+          className="prose dark:prose-invert"
+        />
       </div>
     </div>
   );
