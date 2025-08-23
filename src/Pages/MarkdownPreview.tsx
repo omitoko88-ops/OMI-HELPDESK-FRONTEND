@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
+import { markdownComponents } from "./Markdown/MarkdownComponents";
 
 export const MarkdownPreview = ({ markdown }: { markdown: string }) => {
   return (
@@ -9,21 +10,22 @@ export const MarkdownPreview = ({ markdown }: { markdown: string }) => {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
-        components={{
-          img: ({ src, alt }) => {
-            if (src?.startsWith("blob:")) {
-              return (
-                <img
-                  src={src}
-                  alt={alt}
-                  className="max-w-full rounded border"
-                />
-              );
-            }
+        // components={{
+        //   img: ({ src, alt }) => {
+        //     if (src?.startsWith("blob:")) {
+        //       return (
+        //         <img
+        //           src={src}
+        //           alt={alt}
+        //           className="max-w-full rounded border"
+        //         />
+        //       );
+        //     }
 
-            return <img src={src || ""} alt={alt} className="max-w-full" />;
-          },
-        }}
+        //     return <img src={src || ""} alt={alt} className="max-w-full" />;
+        //   },
+        // }}
+        components={markdownComponents}
       >
         {markdown}
       </ReactMarkdown>

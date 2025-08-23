@@ -7,7 +7,7 @@ import AuthProvider from "./contexts/AuthProvider";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme-provider";
 import Layout from "./layout/pages/Layout";
-import DocPage from "./Pages/docs/[slug]";
+import DocPage from "./Pages/Docs/[slug]";
 import { DocContent } from "./Pages/DocContent";
 import { TableContentProvider } from "./contexts/TableContentContext";
 // import { DocEditor } from "./Pages/best/page/DocEditor";

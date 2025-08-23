@@ -5,6 +5,7 @@ import "highlight.js/styles/github.css";
 import { TiptapEditor, TiptapEditorHtmlOutput } from "./TiptapEditor";
 import { useState } from "react";
 import MyEditor from "./TestTTEditor";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const DocEditor = () => {
   const [title, setTitle] = useState("");
@@ -23,7 +24,7 @@ export const DocEditor = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 px-4 py-6">
+    <div className=" space-y-4 px- py-6">
       <h2 className="text-2xl font-bold">Create New Document</h2>
 
       <Input
@@ -38,18 +39,22 @@ export const DocEditor = () => {
         onChange={(e) => setSlug(e.target.value)}
       />
 
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <h2 className="text-2xl font-bold mb-4">Document Editor</h2>
+      <div className="">
+        <Card>
+          <CardContent>
+            <h2 className="text-2xl font-bold mb-4">Document Editor</h2>
 
-        <h1 className="text-2xl font-bold mb-6">📝 Markdown Editor</h1>
-        <TiptapEditor onChangeMarkdown={(value) => setContent(value)} />
-        {/* <TiptapEditorHtmlOutput onChangeHtml={(value) => setContent(value)} /> */}
+            <h1 className="text-2xl font-bold mb-6">📝 Markdown Editor</h1>
+          </CardContent>
+        </Card>
+        {/* <TiptapEditor onChangeMarkdown={(value) => setContent(value)} /> */}
+        <TiptapEditorHtmlOutput onChangeHtml={(value) => setContent(value)} />
 
-        <MyEditor />
+        {/* <MyEditor /> */}
 
-        <Button className="mt-4" onClick={handleSubmit}>
+        {/* <Button className="mt-4" onClick={handleSubmit}>
           Save
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

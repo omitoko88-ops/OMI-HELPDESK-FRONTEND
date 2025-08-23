@@ -13,11 +13,11 @@ export default function MyEditor() {
     extensions: [
       StarterKit,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-    //   Markdown.configure({
-    //     html: true,
-    //     tightLists: true,
-    //     bulletListMarker: "-",
-    //   }),
+      //   Markdown.configure({
+      //     html: true,
+      //     tightLists: true,
+      //     bulletListMarker: "-",
+      //   }),
     ],
     content: `
         <p>Try selecting a paragraph and clicking one of the text alignment buttons.</p>
@@ -31,11 +31,10 @@ export default function MyEditor() {
         </blockquote>
         `,
     onUpdate({ editor }) {
-    //   const md = editor.storage.markdown.getMarkdown();
+      //   const md = editor.storage.markdown.getMarkdown();
       //   setMarkdown(md);
       //   onChangeMarkdown?.(md);
-    //   console.log(md);
-
+      //   console.log(md);
       // const json = editor.getJSON();
       // const markdown = customMarkdownExport(json);
       // console.log(markdown);
@@ -46,7 +45,7 @@ export default function MyEditor() {
 
   return (
     <EditorContext.Provider value={{ editor }}>
-      <div className="tiptap-button-group" data-orientation="horizontal">
+      <div className="flex gap-2 border-b pb-2 mb-4">
         <TextAlignButton align="left" />
         <TextAlignButton align="center" />
         <TextAlignButton align="right" />

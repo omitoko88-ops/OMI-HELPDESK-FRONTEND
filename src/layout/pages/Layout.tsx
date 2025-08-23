@@ -19,7 +19,6 @@ const Layout: React.FC = () => {
             className="
               flex-1
               min-w-0
-              max-w-6xl
               h-fit
               px-6
               md:px-12

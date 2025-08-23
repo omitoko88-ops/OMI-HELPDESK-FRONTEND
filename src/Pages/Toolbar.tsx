@@ -14,6 +14,8 @@ import {
   Trash2,
   CheckSquare,
   Image as ImageIcon,
+  Lightbulb,
+  Folder,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -34,6 +36,55 @@ export const Toolbar = ({ editor }: Props) => {
   return (
     <div className="flex gap-2 border p-2 rounded-lg bg-muted mb-4 flex-wrap">
       {/* text styles */}
+      <button
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "tabs",
+              attrs: { active: 0 },
+              content: [
+                {
+                  type: "tab",
+                  attrs: { title: "yarn" },
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Isi Tab 1" }],
+                    },
+                  ],
+                },
+                {
+                  type: "tab",
+                  attrs: { title: "roshan" },
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Isi Tab 2" }],
+                    },
+                  ],
+                },
+              ],
+            })
+            .run()
+        }
+        className="p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-800"
+      >
+        <Folder className="w-5 h-5 text-blue-600" />
+      </button>
+      <button
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertContent('<div data-type="tip-block">Your tip here...</div>')
+            .run()
+        }
+        className="p-2 rounded hover:bg-green-100 dark:hover:bg-green-800"
+      >
+        <Lightbulb className="w-5 h-5 text-green-600" />
+      </button>
       <Button
         variant="outline"
         size="sm"

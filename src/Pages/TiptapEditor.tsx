@@ -3,6 +3,7 @@ import {
   EditorContent,
   BubbleMenu,
   FloatingMenu,
+  JSONContent,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
@@ -17,6 +18,13 @@ import TableHeader from "@tiptap/extension-table-header";
 import TextAlign from "@tiptap/extension-text-align";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
+import { Card, CardContent } from "@/components/ui/card";
+import prettier from "prettier/standalone";
+// import parserHtml from "prettier/parser-html";
+import parserHtml from "prettier/plugins/html";
+import { TipBlock } from "./DocEditor/Extentions/TipBlock";
+import { TiptapViewer } from "./DocViewer/TiptapViewerHtml";
+import { Tab, Tabs } from "./DocEditor/Extentions/Tab";
 
 export const TiptapEditor = ({
   onChangeMarkdown,
@@ -166,18 +174,34 @@ function customMarkdownExport(json: any): string {
   return md.trim();
 }
 
-
 //! HTML OUTPUT TIPTAP EDITOR
 export const TiptapEditorHtmlOutput = ({
   onChangeHtml,
 }: {
   onChangeHtml: (val: string) => void;
 }) => {
-  const [html, setHtml] = useState("");
+  const [html, setHtml] = useState(
+    `<h1><strong>Docs Theme</strong></h1>
+      <p>
+        Nextra Docs Theme is a theme that includes almost everything you need to build
+        a modern documentation website. It includes:
+      </p>
+      <ul>
+        <li><p>a top navigation bar</p></li>
+        <li><p>a search bar</p></li>
+        <li><p>a pages sidebar</p></li>
+        <li><p>a table of contents (TOC)</p></li>
+        <li><p>and other built-in components</p></li>
+      </ul>
+      <div data-type="tip-block">Your tip here...</div>`
+  );
 
   const editor = useEditor({
     extensions: [
       StarterKit,
+      TipBlock,
+      Tabs,
+      Tab,
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
@@ -191,28 +215,50 @@ export const TiptapEditorHtmlOutput = ({
       TaskList,
       TaskItem,
     ],
-    content: "<h1>Hello HTML 👋</h1>",
-    onUpdate({ editor }) {
-      const html = editor.getHTML();
-      setHtml(html);
-      onChangeHtml?.(html);
+    content: "",
+    onUpdate: async ({ editor }) => {
+      const rawHtml = editor.getHTML();
+
+      try {
+        // format HTML biar rapi
+        const prettyHtml = await prettier.format(rawHtml, {
+          parser: "html",
+          plugins: [parserHtml],
+        });
+
+        setHtml(prettyHtml);
+        onChangeHtml?.(prettyHtml);
+      } catch (e) {
+        console.error("Prettier gagal format:", e);
+        setHtml(rawHtml); // fallback biar tidak blank
+      }
     },
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+    <div className="flex flex-col w-full">
       <div>
         <Toolbar editor={editor} />
-        <EditorContent editor={editor} />
-      </div>
-      <div className="p-4 border rounded-md bg-muted whitespace-pre-wrap overflow-auto">
-        <h2 className="text-lg font-bold mb-2">HTML Output</h2>
-        <pre className="text-sm">{html}</pre>
-        <div
-          dangerouslySetInnerHTML={{ __html: html }}
-          className="prose dark:prose-invert"
+        <EditorContent
+          editor={editor}
+          className="prose dark:prose-invert min-w-full"
         />
       </div>
+
+      <h2 className="text-lg font-bold mb-2">HTML Output</h2>
+
+      <Card className="flex flex-row w-full px-4">
+        <Card className="w-full">
+          <CardContent>
+            <pre className="text-sm whitespace-pre-wrap">{html}</pre>
+          </CardContent>
+        </Card>
+        <Card className="w-full">
+          <CardContent>
+            <TiptapViewer html={html} />
+          </CardContent>
+        </Card>
+      </Card>
     </div>
   );
 };
