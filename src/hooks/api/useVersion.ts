@@ -11,5 +11,6 @@ export const useVersion = () => {
       const res = await getVersions();
       return res;
     },
+    staleTime: 100 * 60 * 360,
   });
 };
