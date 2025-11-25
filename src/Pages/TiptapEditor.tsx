@@ -1,209 +1,47 @@
-import {
-  useEditor,
-  EditorContent,
-  BubbleMenu,
-  FloatingMenu,
-  JSONContent,
-} from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "tiptap-markdown";
-import { useEffect, useState } from "react";
-import { Toolbar } from "./Toolbar";
-import { MarkdownPreview } from "./MarkdownPreview";
-import Image from "@tiptap/extension-image";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import TextAlign from "@tiptap/extension-text-align";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import { Card, CardContent } from "@/components/ui/card";
-import prettier from "prettier/standalone";
-// import parserHtml from "prettier/parser-html";
-import parserHtml from "prettier/plugins/html";
-import { TipBlock } from "./DocEditor/Extentions/TipBlock";
-import { TiptapViewer } from "./DocViewer/TiptapViewerHtml";
-import { Tab, Tabs } from "./DocEditor/Extentions/Tab";
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { useEffect, useState } from 'react'
+import { Toolbar } from './Toolbar'
+import Image from '@tiptap/extension-image'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import TextAlign from '@tiptap/extension-text-align'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import { Card, CardContent } from '@/components/ui/card'
+import prettier from 'prettier/standalone'
+import parserHtml from 'prettier/plugins/html'
+import { TipBlock } from './DocEditor/CustomComponents/TipBlock/TipBlock'
+import { TiptapViewer } from './DocViewer/TiptapViewerHtml'
+import { Tab, Tabs } from './DocEditor/CustomComponents/TabsComponent/Tab'
+import { Badge } from './DocEditor/CustomComponents/Badge/Badge'
+import { CustomSeparator } from './DocEditor/CustomComponents/Separator/Separator'
+import { Steps } from './DocEditor/CustomComponents/Steps/Steps'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useTableContent } from '@/contexts/TableContentContext'
 
-export const TiptapEditor = ({
-  onChangeMarkdown,
-}: {
-  onChangeMarkdown: (val: string) => void;
-}) => {
-  const [markdown, setMarkdown] = useState("");
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Image,
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableCell,
-      TableHeader,
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
-      TaskList,
-      TaskItem,
-      Markdown.configure({
-        html: true,
-        tightLists: true,
-        bulletListMarker: "-",
-      }),
-    ],
-    content: "# Hello Markdown 👋",
-    onUpdate({ editor }) {
-      const md = editor.storage.markdown.getMarkdown();
-      setMarkdown(md);
-      onChangeMarkdown?.(md);
-
-      // const json = editor.getJSON();
-      // const markdown = customMarkdownExport(json);
-      // console.log(markdown);
-      // setMarkdown(markdown);
-      // onChangeMarkdown?.(markdown);
-    },
-  });
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-      <div>
-        <Toolbar editor={editor} />
-        {editor && (
-          <>
-            <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
-              <div className="p-2 bg-white shadow rounded border">
-                Floating Menu
-              </div>
-            </FloatingMenu>
-            <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-              <div className="p-2 bg-white shadow rounded border">
-                Bubble Menu
-              </div>
-            </BubbleMenu>
-          </>
-        )}
-        <div className=" rounded-md p-2 min-h-[300px] bg-background">
-          <EditorContent editor={editor} role="presentation" className="" />
-        </div>
-      </div>
-      <div className="p-4 border rounded-md bg-muted whitespace-pre-wrap overflow-auto">
-        <h2 className="text-lg font-bold mb-2">Markdown Output</h2>
-        <pre className="text-sm">{markdown}</pre>
-        <MarkdownPreview markdown={markdown} />
-      </div>
-    </div>
-  );
-};
-
-function customMarkdownExport(json: any): string {
-  let md = "";
-
-  const processContent = (content: any[]) =>
-    content
-      .map((node) => {
-        const text = node.text || "";
-        if (!node.marks) return text;
-
-        return node.marks.reduce((acc: any, mark: { type: any }) => {
-          switch (mark.type) {
-            case "bold":
-              return `**${acc}**`;
-            case "italic":
-              return `*${acc}*`;
-            case "strike":
-              return `~~${acc}~~`;
-            default:
-              return acc;
-          }
-        }, text);
-      })
-      .join("");
-
-  const walk = (nodes: any[]) => {
-    for (const node of nodes) {
-      switch (node.type) {
-        case "heading":
-          md += `${"#".repeat(node.attrs.level)} ${processContent(
-            node.content || []
-          )}\n\n`;
-          break;
-        case "paragraph":
-          const textAlign = node.attrs?.textAlign;
-          const paraText = processContent(node.content || []);
-
-          if (textAlign === "center") {
-            md += `::center\n${paraText}\n::\n\n`;
-          } else {
-            md += `${paraText}\n\n`;
-          }
-          break;
-        case "bulletList":
-          node.content?.forEach((li: any) => {
-            md += `- ${processContent(li.content?.[0]?.content || [])}\n`;
-          });
-          md += "\n";
-          break;
-        case "orderedList":
-          node.content?.forEach((li: any, i: number) => {
-            md += `${i + 1}. ${processContent(
-              li.content?.[0]?.content || []
-            )}\n`;
-          });
-          md += "\n";
-          break;
-        case "taskList":
-          node.content?.forEach((item: any) => {
-            const checked = item.attrs.checked ? "x" : " ";
-            md += `- [${checked}] ${processContent(
-              item.content?.[0]?.content || []
-            )}\n`;
-          });
-          md += "\n";
-          break;
-        default:
-          console.warn("Unhandled type:", node.type);
-      }
-    }
-  };
-
-  walk(json.content || []);
-  return md.trim();
-}
-
-//! HTML OUTPUT TIPTAP EDITOR
 export const TiptapEditorHtmlOutput = ({
   onChangeHtml,
 }: {
-  onChangeHtml: (val: string) => void;
+  onChangeHtml: (val: string) => void
 }) => {
   const [html, setHtml] = useState(
-    `<h1><strong>Docs Theme</strong></h1>
-      <p>
-        Nextra Docs Theme is a theme that includes almost everything you need to build
-        a modern documentation website. It includes:
-      </p>
-      <ul>
-        <li><p>a top navigation bar</p></li>
-        <li><p>a search bar</p></li>
-        <li><p>a pages sidebar</p></li>
-        <li><p>a table of contents (TOC)</p></li>
-        <li><p>and other built-in components</p></li>
-      </ul>
-      <div data-type="tip-block">Your tip here...</div>`
-  );
+    `<h1><strong>Docs Theme</strong></h1> <p> Nextra Docs Theme is a theme that includes almost everything you need to build a modern documentation website. It <s>includes</s>: </p> <ul> <li><p>a top navigation bar</p></li> <li><p>a search bar</p></li> <li> <p>a <code>pages sidebar</code></p> </li> <li><p>a table of contents (TOC)</p></li> <li> <p> <em>and other built-in</em> <span label="components" color="#ca0a0a" data-type="badge" >components</span > </p> </li> </ul> <div data-type="tip-block">Your tip here...</div> <h2><strong>Start as a New Project</strong></h2> <custom-separator></custom-separator> <p style="text-align: right">Halo Pak Dedi</p> <p style="text-align: center">Nama Saya Roshan Ram Metta</p> <table style="min-width: 75px"> <colgroup> <col style="min-width: 25px" /> <col style="min-width: 25px" /> <col style="min-width: 25px" /> </colgroup> <tbody> <tr> <th colspan="1" rowspan="1"><p>Gaji</p></th> <th colspan="1" rowspan="1"><p>Alamat</p></th> <th colspan="1" rowspan="1"><p>Umur</p></th> </tr> <tr> <td colspan="1" rowspan="1"><p>2.000.000</p></td> <td colspan="1" rowspan="1"><p>Jl. Sei Mencirim</p></td> <td colspan="1" rowspan="1"><p>26 Tahun</p></td> </tr> <tr> <td colspan="1" rowspan="1"><p>3.500.000</p></td> <td colspan="1" rowspan="1"><p>Jl. Timut laut paling kanan</p></td> <td colspan="1" rowspan="1"> <p>30 Tahun</p> <p></p> </td> </tr> </tbody> </table> <ol> <li><p>Satu</p></li> <li><p>Dua</p></li> <li><p>Tiga</p></li> </ol> <p></p> <img src="blob:http://localhost:5173/15b47ab7-a2a6-49f4-8c14-37d3ccee4803" /> <p></p> <p></p>`
+  )
 
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Steps,
+      CustomSeparator,
+      Badge,
       TipBlock,
       Tabs,
       Tab,
       TextAlign.configure({
-        types: ["heading", "paragraph"],
+        types: ['heading', 'paragraph'],
       }),
       Image,
       Table.configure({
@@ -215,25 +53,38 @@ export const TiptapEditorHtmlOutput = ({
       TaskList,
       TaskItem,
     ],
-    content: "",
+    content: '',
     onUpdate: async ({ editor }) => {
-      const rawHtml = editor.getHTML();
+      const rawHtml = editor.getHTML()
 
       try {
         // format HTML biar rapi
         const prettyHtml = await prettier.format(rawHtml, {
-          parser: "html",
+          parser: 'html',
           plugins: [parserHtml],
-        });
+        })
 
-        setHtml(prettyHtml);
-        onChangeHtml?.(prettyHtml);
+        setHtml(prettyHtml)
+        onChangeHtml?.(prettyHtml)
       } catch (e) {
-        console.error("Prettier gagal format:", e);
-        setHtml(rawHtml); // fallback biar tidak blank
+        console.error('Prettier gagal format:', e)
+        setHtml(rawHtml) // fallback biar tidak blank
       }
     },
-  });
+  })
+  const { setTableContent } = useTableContent()
+  const isMd = useMediaQuery('(min-width: 868px)')
+  useEffect(() => {
+    if (isMd) {
+      setTableContent(
+        <div className="w-64">
+          <pre className="text-sm whitespace-pre-wrap">{html}</pre>
+        </div>
+      )
+    } else {
+      setTableContent(null)
+    }
+  }, [isMd, setTableContent])
 
   return (
     <div className="flex flex-col w-full">
@@ -247,7 +98,7 @@ export const TiptapEditorHtmlOutput = ({
 
       <h2 className="text-lg font-bold mb-2">HTML Output</h2>
 
-      <Card className="flex flex-row w-full px-4">
+      <Card className="flex flex-col w-full px-4">
         <Card className="w-full">
           <CardContent>
             <pre className="text-sm whitespace-pre-wrap">{html}</pre>
@@ -260,5 +111,5 @@ export const TiptapEditorHtmlOutput = ({
         </Card>
       </Card>
     </div>
-  );
-};
+  )
+}

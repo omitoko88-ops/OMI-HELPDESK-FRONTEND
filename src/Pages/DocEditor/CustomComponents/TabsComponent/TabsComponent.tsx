@@ -1,5 +1,5 @@
 import { NodeViewContent, NodeViewProps, NodeViewWrapper } from "@tiptap/react";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 // Komponen untuk setiap tab individual
 export function TabComponent({
@@ -114,7 +114,7 @@ export default function TabsComponent({ node, editor, getPos }: NodeViewProps) {
               <button
                 key={i}
                 onClick={() => activateTab(i)}
-                className={`flex-grow px-4 py-2 text-sm font-medium transition-colors duration-200 ease-in-out
+                className={`flex min-w-30 justify-center px-4 py-2 text-sm font-medium transition-colors duration-200 ease-in-out
                   ${
                     i === active
                       ? "bg-white dark:bg-gray-900 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"

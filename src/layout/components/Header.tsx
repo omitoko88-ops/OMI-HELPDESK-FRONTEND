@@ -27,12 +27,12 @@ export default function Header() {
     error,
   } = useVersion();
   useEffect(() => {
-    // if (listVersion) setVersion(listVersion[0].version);
+    if (listVersion) setVersion(listVersion[0].version);
   }, [listVersion]);
   return (
     <header className="fixed w-full h-17 border-b flex items-center justify-center px-6 z-50 bg-navbg/70 backdrop-blur-md">
       {isError && error instanceof ApiError && <ErrorAlert error={error} />}
-      <div className="max-w-[1440px] w-full flex items-center justify-between">
+      <div className="max-w-[1540px] w-full flex items-center justify-between">
         <div className="text-2xl font-bold">Documentation</div>
 
         <div className="flex justify-center items-center gap-6 text-sm">

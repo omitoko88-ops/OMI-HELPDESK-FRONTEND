@@ -2,10 +2,10 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import "highlight.js/styles/github.css";
-import { TiptapEditor, TiptapEditorHtmlOutput } from "./TiptapEditor";
-import { useState } from "react";
-import MyEditor from "./TestTTEditor";
+import { TiptapEditorHtmlOutput } from "./TiptapEditor";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export const DocEditor = () => {
   const [title, setTitle] = useState("");
@@ -47,14 +47,11 @@ export const DocEditor = () => {
             <h1 className="text-2xl font-bold mb-6">📝 Markdown Editor</h1>
           </CardContent>
         </Card>
-        {/* <TiptapEditor onChangeMarkdown={(value) => setContent(value)} /> */}
         <TiptapEditorHtmlOutput onChangeHtml={(value) => setContent(value)} />
 
-        {/* <MyEditor /> */}
-
-        {/* <Button className="mt-4" onClick={handleSubmit}>
+        <Button className="mt-4" onClick={handleSubmit}>
           Save
-        </Button> */}
+        </Button>
       </div>
     </div>
   );

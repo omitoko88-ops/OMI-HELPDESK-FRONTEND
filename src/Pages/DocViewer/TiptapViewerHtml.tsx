@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { TipBlock } from "../DocEditor/Extentions/TipBlock";
+import { TipBlock } from "../DocEditor/CustomComponents/TipBlock/TipBlock";
 import TextAlign from "@tiptap/extension-text-align";
 import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
@@ -10,12 +10,18 @@ import TableHeader from "@tiptap/extension-table-header";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
-import { Tab, Tabs } from "../DocEditor/Extentions/Tab";
+import { Tab, Tabs } from "../DocEditor/CustomComponents/TabsComponent/Tab";
+import { Badge } from "../DocEditor/CustomComponents/Badge/Badge";
+import { CustomSeparator } from "../DocEditor/CustomComponents/Separator/Separator";
+import { Steps } from "../DocEditor/CustomComponents/Steps/Steps";
 
 export function TiptapViewer({ html }: { html: string }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Steps,
+      CustomSeparator,
+      Badge,
       TipBlock,
       Tabs,
       Tab,
@@ -43,5 +49,10 @@ export function TiptapViewer({ html }: { html: string }) {
     }
   }, [editor, html]);
 
-  return <EditorContent editor={editor} className="prose dark:prose-invert" />;
+  return (
+    <EditorContent
+      editor={editor}
+      className="prose dark:prose-invert min-w-full max-w-none"
+    />
+  );
 }

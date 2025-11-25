@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import TabsComponent, { TabComponent } from "../CustomComponents/TabsComponent";
+import TabsComponent, { TabComponent } from "./TabsComponent";
 
 export const Tabs = Node.create({
   name: "tabs",

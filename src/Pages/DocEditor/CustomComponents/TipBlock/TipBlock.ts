@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import TipBlockComponent from "../CustomComponents/TipBlockComponent";
+import TipBlockComponent from "./TipBlockComponent";
 
 export const TipBlock = Node.create({
   name: "tipBlock",
@@ -10,7 +10,11 @@ export const TipBlock = Node.create({
     return [{ tag: "div[data-type='tip-block']" }];
   },
   renderHTML({ HTMLAttributes }) {
-    return ["div", mergeAttributes(HTMLAttributes, { "data-type": "tip-block" }), 0];
+    return [
+      "div",
+      mergeAttributes(HTMLAttributes, { "data-type": "tip-block" }),
+      0,
+    ];
   },
   addNodeView() {
     return ReactNodeViewRenderer(TipBlockComponent);

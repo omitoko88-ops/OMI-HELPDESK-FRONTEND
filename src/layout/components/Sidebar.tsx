@@ -21,7 +21,7 @@ const LayoutSidebar = () => {
       side="left"
       collapsible="icon"
       variant="inset"
-      className="border-r"
+      // className="border-r"
     >
       <SidebarContent>
         <NavMain items={navMain} />

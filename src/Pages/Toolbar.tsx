@@ -1,4 +1,5 @@
 import { Editor } from "@tiptap/react";
+import { HexColorPicker } from "react-colorful";
 import {
   Bold,
   Italic,
@@ -18,6 +19,8 @@ import {
   Folder,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import ColorPicker from "@/components/common/CustomColorPicker";
 
 type Props = { editor: Editor | null };
 
@@ -31,12 +34,77 @@ export const Toolbar = ({ editor }: Props) => {
     editor.chain().focus().setImage({ src: url }).run();
   };
 
+  const [label, setLabel] = useState("New");
+  const [hexColor, setHexColor] = useState("#7af441");
+
   if (!editor) return null;
 
   return (
     <div className="flex gap-2 border p-2 rounded-lg bg-muted mb-4 flex-wrap">
-      {/* text styles */}
+      <div className="flex gap-2 items-center border rounded-lg relative p-2">
+        <div className="absolute text-[8px] -top-2 left-3 bg-mute px-1">
+          Badge
+        </div>
+
+        {/* Input Label */}
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="Badge text"
+          className="border px-2 py-1 text-sm rounded"
+        />
+
+        {/* Pilih warna */}
+        <ColorPicker
+          typeComponent="dropdown"
+          value={hexColor}
+          onChange={(c) => setHexColor(c)}
+        />
+
+        {/* Tombol Insert */}
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .setBadge({ label: label, color: hexColor })
+              .run()
+          }
+        >
+          Add Badge
+        </Button>
+      </div>
+
       <button
+        onClick={() => editor?.commands.insertStep()}
+        className="px-2 py-1 border rounded"
+      >
+        Add Step 1
+      </button>
+
+      <button
+        onClick={() => editor?.commands.insertStep()}
+        className="px-2 py-1 border rounded"
+      >
+        Add Step 2
+      </button>
+
+      <Button
+        variant={"outline"}
+        size={"sm"}
+        onClick={() => editor?.commands.insertCustomSeparator()}
+        className=" border rounded"
+      >
+        -
+      </Button>
+      {/* text styles */}
+
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() =>
           editor
             .chain()
@@ -47,21 +115,21 @@ export const Toolbar = ({ editor }: Props) => {
               content: [
                 {
                   type: "tab",
-                  attrs: { title: "yarn" },
+                  attrs: { title: "npm" },
                   content: [
                     {
                       type: "paragraph",
-                      content: [{ type: "text", text: "Isi Tab 1" }],
+                      content: [{ type: "text", text: "Npm Install" }],
                     },
                   ],
                 },
                 {
                   type: "tab",
-                  attrs: { title: "roshan" },
+                  attrs: { title: "php" },
                   content: [
                     {
                       type: "paragraph",
-                      content: [{ type: "text", text: "Isi Tab 2" }],
+                      content: [{ type: "text", text: "Composer Install" }],
                     },
                   ],
                 },
@@ -69,11 +137,13 @@ export const Toolbar = ({ editor }: Props) => {
             })
             .run()
         }
-        className="p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-800"
+        className="p-2 hover:bg-blue-100 dark:hover:bg-blue-800"
       >
         <Folder className="w-5 h-5 text-blue-600" />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() =>
           editor
             .chain()
@@ -81,10 +151,10 @@ export const Toolbar = ({ editor }: Props) => {
             .insertContent('<div data-type="tip-block">Your tip here...</div>')
             .run()
         }
-        className="p-2 rounded hover:bg-green-100 dark:hover:bg-green-800"
+        className="p-2 hover:bg-green-100 dark:hover:bg-green-800"
       >
         <Lightbulb className="w-5 h-5 text-green-600" />
-      </button>
+      </Button>
       <Button
         variant="outline"
         size="sm"
