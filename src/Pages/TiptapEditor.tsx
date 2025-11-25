@@ -62,6 +62,12 @@ export const TiptapEditorHtmlOutput = ({
         const prettyHtml = await prettier.format(rawHtml, {
           parser: 'html',
           plugins: [parserHtml],
+          tabWidth: 2,
+          useTabs: false,
+          printWidth: 80,
+          htmlWhitespaceSensitivity: 'ignore',
+          bracketSameLine: false,
+          singleAttributePerLine: true,
         })
 
         setHtml(prettyHtml)
@@ -84,7 +90,7 @@ export const TiptapEditorHtmlOutput = ({
     } else {
       setTableContent(null)
     }
-  }, [isMd, setTableContent])
+  }, [isMd, setTableContent, html])
 
   return (
     <div className="flex flex-col w-full">
