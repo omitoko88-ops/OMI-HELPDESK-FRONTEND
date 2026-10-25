@@ -23,7 +23,6 @@ import { useState } from 'react'
 import ColorPicker from '@/components/common/CustomColorPicker'
 import { BadgeInsertButton } from './Buttons/BadgeInsertButton'
 import { SeparatorButton } from './Buttons/SeparatorButton'
-import { TabsInsertButton } from './Buttons/TabsInsertButton'
 import { TipInsertButton } from './Buttons/TipInsertButton'
 import { BoldButton } from './Buttons/BoldButton'
 import { ItalicButton } from './Buttons/ItalicButton'
@@ -34,6 +33,9 @@ import { ListButtons } from './Buttons/ListButtons'
 import { AlignButtons } from './Buttons/AlignButtons'
 import { TableButtons } from './Buttons/TableButtons'
 import { ImageUploadButton } from './Buttons/ImageUploadButton'
+import { CodeTabsInsertButton } from './Buttons/CodeTabsButton'
+import { TabsInsertButton } from './Buttons/TabsButton'
+import { PdfInsertButton } from './Buttons/PdfInsertButton'
 
 type Props = { editor: Editor | null }
 
@@ -83,6 +85,12 @@ export const Toolbar = ({ editor }: Props) => {
 
       {/* image */}
       <ImageUploadButton editor={editor} />
+
+      <CodeTabsInsertButton editor={editor} />
+
+      <TabsInsertButton editor={editor} />
+
+      <PdfInsertButton editor={editor} />
     </div>
   )
 }

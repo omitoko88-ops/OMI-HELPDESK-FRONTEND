@@ -3,8 +3,9 @@ import { Outlet } from "react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 import { useTableContent } from "@/contexts/TableContentContext";
-import Header from "../components/Header";
+import Header from "../components/Header/Header";
 import LayoutSidebar from "../components/Sidebar";
+import Header2 from "../components/Header/Header2";
 
 const Layout: React.FC = () => {
   const { tableContent } = useTableContent();
@@ -12,20 +13,20 @@ const Layout: React.FC = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full flex flex-col">
-        <Header />
-        <div className="flex flex-1 max-w-[1540px] w-full mx-auto pt-17 max-h-svh">
+        <div className="flex flex-1 w-full mx-auto max-h-svh">
           <LayoutSidebar />
           <main
             className="
-              flex-1
+            flex-1
               min-w-0 
               overflow-y-auto
-              px-6
-              md:px-12
+              px-36
+              md:px-42
               scrollbar-thin
               border-x-1
             "
-          >
+            >
+            <Header2 />
             <Outlet />
           </main>
           {tableContent}

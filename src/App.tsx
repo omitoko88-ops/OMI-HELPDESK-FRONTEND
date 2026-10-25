@@ -1,17 +1,18 @@
-import { BrowserRouter, Route, Routes } from "react-router";
-import { Home } from "./Pages/Dashboard/pages/Home";
-import { ScrollToTop } from "./components/common/ScrollToTop";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import AuthProvider from "./contexts/AuthProvider";
-import { queryClient } from "./lib/queryClient";
-import { ThemeProvider } from "./components/theme-provider";
-import Layout from "./layout/pages/Layout";
-import DocPage from "./Pages/Docs/[slug]";
-import { DocContent } from "./Pages/DocContent";
-import { TableContentProvider } from "./contexts/TableContentContext";
+import { BrowserRouter, Route, Routes } from 'react-router'
+import { Home } from './Pages/Dashboard/pages/Home'
+import { ScrollToTop } from './components/common/ScrollToTop'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'sonner'
+import AuthProvider from './contexts/AuthProvider'
+import { queryClient } from './lib/queryClient'
+import { ThemeProvider } from './components/theme-provider'
+import Layout from './layout/pages/Layout'
+import DocPage from './Pages/Docs/[slug]'
+import { DocContent } from './Pages/DocContent'
+import { TableContentProvider } from './contexts/TableContentContext'
 // import { DocEditor } from "./Pages/best/page/DocEditor";
-import { DocEditor } from "./Pages/DocEditor";
+import { DocEditor } from './Pages/DocEditor'
+import Example from './Pages/Example'
 // import { Layout } from "./layout/pages/Navbar";
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
                     <Route index path="/" element={<DocContent />} />
                     <Route index path="/edit" element={<DocEditor />} />
                   </Route>
+                  <Route index path="/example" element={<Example />} />
                 </Route>
               </Routes>
             </ThemeProvider>
@@ -36,7 +38,7 @@ function App() {
         </QueryClientProvider>
       </BrowserRouter>
     </>
-  );
+  )
 }
 
-export default App;
+export default App

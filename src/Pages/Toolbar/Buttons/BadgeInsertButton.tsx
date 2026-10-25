@@ -5,12 +5,21 @@ import { ToolbarButtonProps } from '../types'
 
 export const BadgeInsertButton = ({ editor }: ToolbarButtonProps) => {
   const [hexColor, setHexColor] = useState('#7af441')
+  const [label, setLabel] = useState('New')
 
   return (
     <div className="flex gap-2 items-center border rounded-lg relative p-2">
       <div className="absolute text-[8px] -top-2 left-3 bg-mute px-1">
         Badge
       </div>
+
+      <input
+        type="text"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        placeholder="Badge text"
+        className="border px-2 py-1 text-sm rounded"
+      />
 
       {/* Pilih warna */}
       <ColorPicker
@@ -24,7 +33,11 @@ export const BadgeInsertButton = ({ editor }: ToolbarButtonProps) => {
         variant="default"
         size="sm"
         onClick={() => {
-          editor.chain().focus().setBadge({ color: hexColor }).run()
+          editor
+            .chain()
+            .focus()
+            .setBadge({ label: label, color: hexColor })
+            .run()
         }}
       >
         Add Badge
