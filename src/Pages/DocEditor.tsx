@@ -1,11 +1,8 @@
 // components/DocEditor.tsx
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import "highlight.js/styles/github.css";
 import { TiptapEditorHtmlOutput } from "./TiptapEditor";
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useState } from "react";
 
 export const DocEditor = () => {
   const [title, setTitle] = useState("");
@@ -25,29 +22,10 @@ export const DocEditor = () => {
 
   return (
     <div className=" space-y-4 px- py-6">
-      <h2 className="text-2xl font-bold">Create New Document</h2>
-
-      <Input
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-
-      <Input
-        placeholder="Slug (example: getting-started)"
-        value={slug}
-        onChange={(e) => setSlug(e.target.value)}
-      />
+        <TiptapEditorHtmlOutput onChangeHtml={(value) => setContent(value)} />
 
       <div className="">
-        <Card>
-          <CardContent>
-            <h2 className="text-2xl font-bold mb-4">Document Editor</h2>
-
-            <h1 className="text-2xl font-bold mb-6">📝 Markdown Editor</h1>
-          </CardContent>
-        </Card>
-        <TiptapEditorHtmlOutput onChangeHtml={(value) => setContent(value)} />
+        
 
         <Button className="mt-4" onClick={handleSubmit}>
           Save

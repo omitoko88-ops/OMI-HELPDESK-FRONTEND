@@ -9,8 +9,9 @@ import { navMain } from '@/assets/data'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/components/theme-provider'
 import { ChevronDown, Command, Moon, Search, Settings, Sun } from 'lucide-react'
+import { SidebarProvider } from './Sidebar/SidebarContext'
 
-const LayoutSidebar = () => {
+export function LayoutSidebarContent() {
   const { theme, setTheme } = useTheme()
   const isDark = theme === 'dark'
 
@@ -97,4 +98,10 @@ const LayoutSidebar = () => {
   )
 }
 
-export default LayoutSidebar
+export default function LayoutSidebar() {
+  return (
+    <SidebarProvider>
+      <LayoutSidebarContent />
+    </SidebarProvider>
+  )
+}

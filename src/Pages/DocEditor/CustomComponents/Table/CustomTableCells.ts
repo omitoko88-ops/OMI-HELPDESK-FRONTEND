@@ -1,5 +1,4 @@
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
+import { TableCell, TableHeader } from '@tiptap/extension-table'
 
 export const CELL_TONES = ['yellow', 'red', 'green', 'blue'] as const
 export type CellTone = (typeof CELL_TONES)[number]

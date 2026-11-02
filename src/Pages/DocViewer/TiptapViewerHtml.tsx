@@ -1,63 +1,59 @@
 import { useEffect } from 'react'
+import prettier from 'prettier/standalone'
+import parserHtml from 'prettier/plugins/html'
 import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { TipBlock } from '../DocEditor/CustomComponents/TipBlock/TipBlock'
-import TextAlign from '@tiptap/extension-text-align'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
-import Image from '@tiptap/extension-image'
-import { Badge } from '../DocEditor/CustomComponents/Badge/Badge'
-import { CustomSeparator } from '../DocEditor/CustomComponents/Separator/Separator'
-import { Steps } from '../DocEditor/CustomComponents/Steps/Steps'
-import {
-  CodeTab,
-  CodeTabs,
-} from '../DocEditor/CustomComponents/CodeTabs/CodeTabs'
-import { TabPanel, TabsNode } from '../DocEditor/CustomComponents/Tabs/TabsNode'
+import { ToolbarFloating } from '../Toolbar/ToolbarFloating'
+import { createEditorExtensions } from '../DocEditor/Extentions/extensions'
+import { docTableClasses } from '../DocEditor/CustomComponents/Table/tableStyles'
+import { docStepsClasses } from '../DocEditor/CustomComponents/Steps/stepsStyles'
 
 export function TiptapViewer({ html }: { html: string }) {
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Steps,
-      CustomSeparator,
-      Badge,
-      TipBlock,
-      TabsNode, TabPanel,
-      CodeTabs,
-      CodeTab,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Image,
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableCell,
-      TableHeader,
-      TaskList,
-      TaskItem,
-    ],
-    content: html,
-    editable: false,
+    extensions: createEditorExtensions(),
+    content: 'initialContent',
+    editable: true,
+
+    onUpdate: async ({ editor }) => {
+      const rawHtml = editor.getHTML()
+
+      try {
+        // format HTML biar rapi
+        const prettyHtml = await prettier.format(rawHtml, {
+          parser: 'html',
+          plugins: [parserHtml],
+          tabWidth: 2,
+          useTabs: false,
+          printWidth: 80,
+          htmlWhitespaceSensitivity: 'ignore',
+          bracketSameLine: false,
+          singleAttributePerLine: true,
+        })
+
+        // onChangeHtml?.(prettyHtml)
+      } catch (e) {
+        console.error('Prettier gagal format:', e)
+      }
+    },
   })
+
+  if (!editor) {
+    return null
+  }
 
   // update content kalau prop html berubah
   useEffect(() => {
     if (editor && html) {
-      editor.commands.setContent(html, false) // false = jangan record ke history
+      editor.commands.setContent(html)
     }
   }, [editor, html])
 
   return (
-    <EditorContent
-      editor={editor}
-      className="prose dark:prose-invert min-w-full max-w-none"
-    />
+    <div>
+      <ToolbarFloating editor={editor} />
+      <EditorContent
+        editor={editor}
+        className={`prose dark:prose-invert min-w-full ${docTableClasses} ${docStepsClasses}`}
+      />
+    </div>
   )
 }
