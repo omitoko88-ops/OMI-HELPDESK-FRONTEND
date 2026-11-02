@@ -14,7 +14,7 @@ import { TableContentProvider } from './contexts/TableContentContext'
 import { DocEditor } from './Pages/DocEditor'
 import Example from './Pages/Example'
 import GeekLayout from './geekLayout/GeekLayout'
-import LoginPage from './Pages/AuthPages/LoginPage'
+import LoginPage from './Pages/AuthPages/Login/LoginPage'
 // import { Layout } from "./layout/pages/Navbar";
 
 function App() {

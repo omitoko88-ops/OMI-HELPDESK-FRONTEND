@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { LOG_TONE_CLASS } from '../../../../data/constants'
+import { LOG_TONE_CLASS } from '../../../../../data/constants'
 import type { LogEntry } from '../../types'
 
 interface TerminalConsoleProps {

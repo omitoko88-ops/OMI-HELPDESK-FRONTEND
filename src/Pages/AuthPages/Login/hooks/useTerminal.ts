@@ -3,7 +3,7 @@ import {
   INITIAL_LOGS,
   NERD_FACTS,
   TERMINAL_PROMPT,
-} from '../../../data/constants'
+} from '../../../../data/constants'
 import type { AppendLog, LogEntry } from '../types'
 
 interface UseTerminalOptions {

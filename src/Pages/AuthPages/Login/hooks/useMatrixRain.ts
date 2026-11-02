@@ -1,5 +1,5 @@
+import { MATRIX_WORDS } from '@/data/constants'
 import { useEffect, useRef, type RefObject } from 'react'
-import { MATRIX_WORDS } from '../../../data/constants'
 
 const FONT_SIZE = 14
 // Jarak horizontal antar kolom (sama seperti versi HTML: fontSize * 2.5)

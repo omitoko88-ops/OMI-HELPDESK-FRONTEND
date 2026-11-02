@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MIN_PASSWORD_LENGTH } from '../../../data/constants'
 import type { AppendLog, LoginStatus, ShowMessage } from '../types'
+import { MIN_PASSWORD_LENGTH } from '@/data/constants'
 
 interface UseLoginOptions {
   appendLog: AppendLog

@@ -1,10 +1,6 @@
-import { useState } from 'react'
 import { BackgroundEffects } from './components/background/BackgroundEffects'
 import { LoginPanel } from './components/RightPanel/LoginPanel'
 import { ShowcasePanel } from './components/LeftPanel/ShowcasePanel'
-import { useAlert } from './hooks/useAlert'
-import { useLogin } from './hooks/useLogin'
-import { useTerminal } from './hooks/useTerminal'
 import { AuthContextProvider, useAuthContext } from './context/AuthContext'
 
 /**
