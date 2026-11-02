@@ -13,6 +13,8 @@ import { TableContentProvider } from './contexts/TableContentContext'
 // import { DocEditor } from "./Pages/best/page/DocEditor";
 import { DocEditor } from './Pages/DocEditor'
 import Example from './Pages/Example'
+import GeekLayout from './geekLayout/GeekLayout'
+import LoginPage from './Pages/AuthPages/LoginPage'
 // import { Layout } from "./layout/pages/Navbar";
 
 function App() {
@@ -26,11 +28,12 @@ function App() {
               <ScrollToTop />
               <Routes>
                 <Route element={<AuthProvider />}>
-                  <Route element={<Layout />}>
+                  <Route element={<GeekLayout />}>
                     <Route index path="/" element={<DocContent />} />
                     <Route index path="/edit" element={<DocEditor />} />
                   </Route>
                   <Route index path="/example" element={<Example />} />
+                  <Route index path="/login" element={<LoginPage />} />
                 </Route>
               </Routes>
             </ThemeProvider>
