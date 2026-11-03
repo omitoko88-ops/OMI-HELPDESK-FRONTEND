@@ -1,7 +1,7 @@
 import { ApiResponse } from "@/interfaces/ApiResponse";
 import { Documentation } from "@/interfaces/Documentation";
 import { api } from "@/lib/axios";
-import { handleApiResponse, parsingApiResponse } from "@/lib/handleApiResponse";
+import { handleApiResponse, toApiError } from "@/lib/handleApiResponse";
 
 export const getSpecificDocument = async (
   slug: string,
@@ -18,6 +18,6 @@ export const getSpecificDocument = async (
     }
     return res.data.data;
   } catch (error) {
-    throw parsingApiResponse(error, "Gagal get category, silakan coba lagi");
+    throw toApiError(error, "Gagal get category, silakan coba lagi");
   }
 };

@@ -1,68 +1,82 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { AppendLog, LoginStatus, ShowMessage } from '../types'
-import { MIN_PASSWORD_LENGTH } from '@/data/constants'
+import { useLoginApi } from './Api/useLoginApi'
+import { useAuthStore } from '@/stores/authStore'
+import { useNavigate } from 'react-router'
+
+// Lama jeda (ms) antara "Access Granted" dan pindah halaman
+const REDIRECT_DELAY_MS = 1500
 
 interface UseLoginOptions {
   appendLog: AppendLog
   showMessage: ShowMessage
 }
 
-/**
- * Simulasi proses autentikasi.
- * GANTI isi setTimeout di bawah dengan pemanggilan API login sungguhan
- * (mis. fetch/axios ke endpoint backend), lalu set status sesuai hasilnya.
- */
 export function useLogin({ appendLog, showMessage }: UseLoginOptions) {
-  const [status, setStatus] = useState<LoginStatus>('idle')
-  // Simpan id timer supaya bisa dibatalkan saat komponen di-unmount
-  const timers = useRef<number[]>([])
+  const loginApi = useLoginApi()
+  const { setToken } = useAuthStore()
+  const navigate = useNavigate()
+
+  // Simpan id timer redirect agar bisa dibatalkan saat unmount
+  const redirectTimer = useRef<number | null>(null)
 
   useEffect(() => {
-    const pending = timers.current
-    return () => pending.forEach((id) => window.clearTimeout(id))
+    return () => {
+      // Cleanup: batalkan redirect yang belum jalan supaya tidak
+      // memanggil navigate setelah komponen hilang
+      if (redirectTimer.current) window.clearTimeout(redirectTimer.current)
+    }
   }, [])
+
+  // Status 'success' tetap aktif selama delay (isSuccess tidak reset sendiri),
+  // jadi tombol login bisa tetap di-disable sampai pindah halaman
+  const status: LoginStatus = loginApi.isPending
+    ? 'loading'
+    : loginApi.isSuccess
+      ? 'success'
+      : 'idle'
+
+  const { mutate } = loginApi
 
   const login = useCallback(
     (username: string, password: string) => {
-      setStatus('loading')
       appendLog(`[AUTH] Initiating handshake for: ${username}...`, 'accent')
 
-      const verifyTimer = window.setTimeout(() => {
-        if (password.length < MIN_PASSWORD_LENGTH) {
-          // Gagal: tampilkan error dan kembalikan tombol ke keadaan semula
-          showMessage(
-            'Access Denied: Key string length below cryptographic requirements.',
-            'error',
-          )
-          appendLog(
-            `[ERROR] Authentication failed for ${username}: Invalid Passkey Length`,
-            'warning',
-          )
-          setStatus('idle')
-          return
-        }
+      mutate(
+        { username, password },
+        {
+          onError: (err) => {
+            showMessage(`Access Denied: ${err.message}`, 'error')
+            appendLog(
+              `[ERROR] Authentication failed for ${username}: ${err.message} (code ${err.code})`,
+              'warning',
+            )
+          },
+          onSuccess: (res) => {
+            showMessage(
+              'Access Granted! Decrypting Documentation Vault...',
+              'success',
+            )
+            appendLog(
+              `[SUCCESS] 200 OK - Access token generated for ${username}`,
+              'cyan',
+            )
 
-        // Berhasil
-        showMessage(
-          'Access Granted! Decrypting Documentation Vault...',
-          'success',
-        )
-        appendLog(
-          `[SUCCESS] 200 OK - Access token generated for ${username}`,
-          'cyan',
-        )
-        setStatus('success')
+            // Token disimpan langsung (tidak menunggu delay) agar
+            // halaman tujuan sudah punya sesi saat dibuka
+            setToken(res.token)
 
-        // Simulasi redirect. Ganti dengan navigate('/dashboard') dari router Anda.
-        const redirectTimer = window.setTimeout(() => {
-          appendLog('[REDIRECT] Loading /docs/dashboard...', 'accent')
-        }, 1000)
-        timers.current.push(redirectTimer)
-      }, 1200)
+            appendLog('[REDIRECT] Loading /dashboard...', 'accent')
 
-      timers.current.push(verifyTimer)
+            // Delay hanya untuk efek tampilan, lalu pindah halaman
+            redirectTimer.current = window.setTimeout(() => {
+              navigate('/')
+            }, REDIRECT_DELAY_MS)
+          },
+        },
+      )
     },
-    [appendLog, showMessage],
+    [appendLog, showMessage, mutate, setToken, navigate],
   )
 
   return { status, login }

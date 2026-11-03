@@ -1,13 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
-import { Home } from './Pages/Dashboard/pages/Home'
 import { ScrollToTop } from './components/common/ScrollToTop'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import AuthProvider from './contexts/AuthProvider'
 import { queryClient } from './lib/queryClient'
 import { ThemeProvider } from './components/theme-provider'
-import Layout from './layout/pages/Layout'
-import DocPage from './Pages/Docs/[slug]'
 import { DocContent } from './Pages/DocContent'
 import { TableContentProvider } from './contexts/TableContentContext'
 // import { DocEditor } from "./Pages/best/page/DocEditor";
@@ -24,7 +21,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <TableContentProvider>
             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-              <Toaster />
+              <Toaster position="top-center" />
               <ScrollToTop />
               <Routes>
                 <Route element={<AuthProvider />}>
