@@ -1,5 +1,4 @@
 import { FormProvider } from 'react-hook-form'
-import type { LogEntry } from '../../types'
 import { BrandHeader } from './BrandHeader'
 import { CircuitPattern } from './CircuitPattern'
 import { ShowcaseFooter } from './ShowcaseFooter'

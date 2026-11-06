@@ -12,6 +12,7 @@ import { DocEditor } from './Pages/DocEditor'
 import Example from './Pages/Example'
 import GeekLayout from './geekLayout/GeekLayout'
 import LoginPage from './Pages/AuthPages/Login/LoginPage'
+import RegisterPage from './Pages/AuthPages/Register/RegisterPage'
 // import { Layout } from "./layout/pages/Navbar";
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
                   </Route>
                   <Route index path="/example" element={<Example />} />
                   <Route index path="/login" element={<LoginPage />} />
+                  <Route index path="/register" element={<RegisterPage />} />
                 </Route>
               </Routes>
             </ThemeProvider>

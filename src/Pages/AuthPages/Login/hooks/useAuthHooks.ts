@@ -1,11 +1,15 @@
-import { FormEvent, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { useLocation } from 'react-router'
 import { useAlert } from './useAlert'
 import { useTerminal } from './useTerminal'
 import { useLogin } from './useLogin'
-import { TerminalFormValues } from '../components/LeftPanel/TerminalConsole'
-import { useForm } from 'react-hook-form'
+import { loginSchema, type LoginFormType } from '@/schemas/LoginSchema'
+import type { TerminalFormValues } from '../components/LeftPanel/TerminalConsole'
 
 export function useAuthHooks() {
+  const location = useLocation()
   const [matrixActive, setMatrixActive] = useState(true)
   const toggleMatrix = () => setMatrixActive((prev) => !prev)
 
@@ -18,29 +22,42 @@ export function useAuthHooks() {
     },
   })
 
-  const LoginFormMethods = useForm<{ username: string; password: string }>({
+  const LoginFormMethods = useForm<LoginFormType>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onTouched',
     defaultValues: {
       username: '',
       password: '',
     },
   })
 
-  // Handler yang dipanggil HANYA kalau validasi react-hook-form lolos.
-  // `values` berisi { username, password } dari form.
-  const onValidSubmit = (values: { username: string; password: string }) => {
-    console.log('submit', values)
-    login(values.username, values.password)
-  }
-  const handleSubmit = LoginFormMethods.handleSubmit(onValidSubmit)
+  const { alert, showMessage, clearMessage } = useAlert()
 
-  const { alert, showMessage } = useAlert()
+  useEffect(() => {
+    if (!(location.state as { registered?: boolean } | null)?.registered) return
+
+    showMessage(
+      'Account provisioned successfully. Authenticate to continue.',
+      'success',
+    )
+  }, [location.state, showMessage])
 
   const { logs, appendLog, runCommand, showTrivia } = useTerminal({
     matrixActive,
     onToggleMatrix: toggleMatrix,
   })
 
-  const { loginApi, login } = useLogin({ appendLog, showMessage })
+  const { loginApi, login } = useLogin({
+    appendLog,
+    showMessage,
+    clearMessage,
+  })
+
+  // Handler yang dipanggil HANYA kalau validasi react-hook-form lolos.
+  const onValidSubmit = (values: LoginFormType) => {
+    login(values.username, values.password, rememberMe)
+  }
+  const handleSubmit = LoginFormMethods.handleSubmit(onValidSubmit)
 
   // Tombol "Matrix Rain" di panel kanan: toggle + tampilkan pesan status
   const handleMatrixButton = () => {

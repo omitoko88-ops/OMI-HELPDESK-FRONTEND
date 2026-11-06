@@ -1,45 +1,29 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback } from 'react'
 import type { AppendLog, ShowMessage } from '../types'
 import { useLoginApi } from './Api/useLoginApi'
 import { useAuthStore } from '@/stores/authStore'
-import { useNavigate } from 'react-router'
-
-// Lama jeda (ms) antara "Access Granted" dan pindah halaman
-const REDIRECT_DELAY_MS = 15000
 
 interface UseLoginOptions {
   appendLog: AppendLog
   showMessage: ShowMessage
+  clearMessage: () => void
 }
 
-export function useLogin({ appendLog, showMessage }: UseLoginOptions) {
+export function useLogin({
+  appendLog,
+  showMessage,
+  clearMessage,
+}: UseLoginOptions) {
   const loginApi = useLoginApi()
-  const { setToken } = useAuthStore()
-  const navigate = useNavigate()
+  const setSession = useAuthStore((state) => state.setSession)
 
-  // Simpan id timer redirect agar bisa dibatalkan saat unmount
-  const redirectTimer = useRef<number | null>(null)
-
-  useEffect(() => {
-    return () => {
-      // Cleanup: batalkan redirect yang belum jalan supaya tidak
-      // memanggil navigate setelah komponen hilang
-      if (redirectTimer.current) window.clearTimeout(redirectTimer.current)
-    }
-  }, [])
-
-  // // Status 'success' tetap aktif selama delay (isSuccess tidak reset sendiri),
-  // // jadi tombol login bisa tetap di-disable sampai pindah halaman
-  // const status: LoginStatus = loginApi.isPending
-  //   ? 'loading'
-  //   : loginApi.isSuccess
-  //     ? 'success'
-  //     : 'idle'
-
-  const { mutate } = loginApi
+  const { mutate, isPending } = loginApi
 
   const login = useCallback(
-    (username: string, password: string) => {
+    (username: string, password: string, rememberMe: boolean) => {
+      if (isPending) return
+
+      clearMessage()
       appendLog(`[AUTH] Initiating handshake for: ${username}...`, 'accent')
 
       mutate(
@@ -64,19 +48,13 @@ export function useLogin({ appendLog, showMessage }: UseLoginOptions) {
 
             // Token disimpan langsung (tidak menunggu delay) agar
             // halaman tujuan sudah punya sesi saat dibuka
-            setToken(res.token)
-
-            appendLog('[REDIRECT] Loading /dashboard...', 'accent')
-
-            // Delay hanya untuk efek tampilan, lalu pindah halaman
-            redirectTimer.current = window.setTimeout(() => {
-              navigate('/')
-            }, REDIRECT_DELAY_MS)
+            setSession(res.accessToken, res.user?.id ?? null, rememberMe)
+            appendLog('[REDIRECT] Restoring requested page...', 'accent')
           },
         },
       )
     },
-    [appendLog, showMessage, mutate, setToken, navigate],
+    [appendLog, clearMessage, isPending, mutate, setSession, showMessage],
   )
 
   return { loginApi, login }

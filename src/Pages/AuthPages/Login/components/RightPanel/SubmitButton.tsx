@@ -1,13 +1,8 @@
 import { FaBolt, FaCheck, FaCircleNotch } from 'react-icons/fa6'
-import type { LoginStatus } from '../../types'
-import { UseMutationResult } from '@tanstack/react-query'
 import { useAuthContext } from '../../context/AuthContext'
 
 // Gaya tombol untuk tiap status (ditulis utuh agar terdeteksi Tailwind)
-const STATUS_CLASS: Record<
-  UseMutationResult<unknown, unknown, unknown, unknown>['status'],
-  string
-> = {
+const STATUS_CLASS: Record<'idle' | 'pending' | 'success' | 'error', string> = {
   idle: 'bg-slate-900 hover:bg-slate-800 active:scale-[0.99]',
   pending: 'bg-slate-900', // Gunakan 'pending' untuk v5
   success: 'bg-geek-accent',

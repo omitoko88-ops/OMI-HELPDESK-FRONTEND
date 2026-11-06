@@ -1,4 +1,5 @@
-import { FaKey, FaShieldHalved, FaTerminal } from 'react-icons/fa6'
+import { Link } from 'react-router'
+import { FaKey, FaShieldHalved, FaTerminal, FaUserPlus } from 'react-icons/fa6'
 import { useAuthContext } from '../../context/AuthContext'
 
 /** Tab mode autentikasi + tombol toggle matrix rain. */
@@ -14,6 +15,12 @@ export function AuthHeader() {
         >
           <FaShieldHalved className="text-xs" /> USER_AUTH
         </button>
+        <Link
+          to="/register"
+          className="flex items-center gap-2 pb-1 text-slate-400 transition-colors hover:text-geek-accent"
+        >
+          <FaUserPlus className="text-xs" /> REGISTER
+        </Link>
         {/* Tab SSO belum tersedia (maintenance) */}
         <button
           type="button"

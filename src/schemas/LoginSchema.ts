@@ -1,9 +1,13 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 export const loginSchema = z.object({
-  phoneNumber: z.string().nonempty({ message: "Nomor telepon wajib diisi" }),
-  countryCode: z.string().nonempty({ message: "Kode negara wajib diisi" }),
-  password: z.string().min(6, { message: "Minimal 6 karakter" }),
-});
+  username: z
+    .string()
+    .trim()
+    .min(1, { message: 'Developer alias or email is required' }),
+  password: z
+    .string()
+    .min(6, { message: 'Password must be at least 6 characters' }),
+})
 
-export type LoginFormType = z.infer<typeof loginSchema>;
+export type LoginFormType = z.infer<typeof loginSchema>

@@ -1,4 +1,3 @@
-import { useState, type FormEvent } from 'react'
 import {
   FaCheck,
   FaEye,
@@ -7,18 +6,11 @@ import {
   FaShieldCat,
   FaTerminal,
 } from 'react-icons/fa6'
-import type { LoginStatus } from '../../types'
+import { Link, useLocation } from 'react-router'
 import { FormField } from './FormField'
-import { InputField } from './InputField'
 import { SubmitButton } from './SubmitButton'
 import { useAuthContext } from '../../context/AuthContext'
 import { IconInput } from '@/components/inputs'
-
-interface LoginFormProps {
-  status: LoginStatus
-  onLogin: (username: string, password: string) => void
-  onForgotPassword: () => void
-}
 
 /** Form login: alias/email, password (bisa di-toggle), remember me, dan tombol submit. */
 export function LoginForm() {
@@ -31,6 +23,7 @@ export function LoginForm() {
     handleForgotPassword,
     LoginFormMethods,
   } = useAuthContext()
+  const location = useLocation()
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -46,6 +39,9 @@ export function LoginForm() {
           id="username"
           control={LoginFormMethods.control}
           icon={<FaTerminal className="text-xs" />}
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
         />
       </FormField>
 
@@ -67,6 +63,7 @@ export function LoginForm() {
           id="password"
           control={LoginFormMethods.control}
           icon={<FaLock className="text-xs" />}
+          type={showPassword ? 'text' : 'password'}
           placeholder="••••••••••••••••"
           autoComplete="current-password"
           trailing={
@@ -74,7 +71,7 @@ export function LoginForm() {
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
               aria-label={showPassword ? 'Hide passkey' : 'Show passkey'}
-              className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 transition-colors hover:text-geek-accent focus:outline-none"
+              className="flex items-center text-slate-400 transition-colors hover:text-geek-accent focus:outline-none"
             >
               {showPassword ? (
                 <FaEyeSlash className="text-xs" />
@@ -110,6 +107,17 @@ export function LoginForm() {
       </div>
 
       <SubmitButton />
+
+      <p className="pt-1 text-center font-mono text-xs text-slate-500">
+        New to the network?{' '}
+        <Link
+          to="/register"
+          state={location.state}
+          className="font-bold text-geek-cyan transition-colors hover:text-slate-900 hover:underline"
+        >
+          Request access
+        </Link>
+      </p>
     </form>
   )
 }

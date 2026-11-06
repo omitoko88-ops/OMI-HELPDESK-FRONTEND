@@ -1,4 +1,3 @@
-import type { AlertState, LoginStatus } from '../../types'
 import { AuthHeader } from './AuthHeader'
 import { LoginForm } from './LoginForm'
 import { MessageBox } from './MessageBox'
@@ -13,7 +12,7 @@ export function LoginPanel() {
       <MessageBox />
       <LoginForm />
       <OAuthProviders />
-      <PanelFooter/>
+      <PanelFooter />
     </div>
   )
 }

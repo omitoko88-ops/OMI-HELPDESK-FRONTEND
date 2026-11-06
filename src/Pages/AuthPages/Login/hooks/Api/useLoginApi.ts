@@ -1,6 +1,9 @@
 import { useAppMutation } from '@/lib/ReactQueryHelper'
-import { AuthUserResponse } from '../../interface/LoginUserApiResponse'
 import { api } from '@/lib/axios'
+import { ApiError } from '@/lib/ApiError'
+import type { LoginResponse } from '@/interfaces/LoginResponse'
+import type { User } from '@/interfaces/User'
+import type { AuthSession } from '../../interface/LoginUserApiResponse'
 
 // Tipe input login: dijadikan satu objek karena mutationFn hanya menerima 1 argumen
 export interface LoginPayload {
@@ -8,22 +11,39 @@ export interface LoginPayload {
   password: string
 }
 
-// Fungsi API: payload langsung dikirim sebagai body request.
-// Nama properti (username, password) sudah sama dengan yang diminta backend,
-// jadi tidak perlu dipetakan ulang satu per satu.
-const loginUser = async (payload: LoginPayload) =>
-  (await api.post<AuthUserResponse>('/api/Auth/login', payload)).data
+// Backend lama mengembalikan { token, user }, sedangkan kontrak ApiResponse
+// mengembalikan { meta, data: { access_token, user } }. Normalisasi di sini
+// supaya komponen tidak perlu mengetahui bentuk response HTTP.
+type LoginApiResponse =
+  | LoginResponse
+  | {
+      token?: string
+      user?: User
+    }
+
+const loginUser = async (payload: LoginPayload): Promise<AuthSession> => {
+  const response = await api.post<LoginApiResponse>('/api/Auth/login', payload)
+  const body = response.data
+  const data = 'data' in body ? body.data : undefined
+  const accessToken =
+    data?.access_token ?? ('token' in body ? body.token : undefined)
+  const user = data?.user ?? ('user' in body ? body.user : undefined)
+
+  if (!accessToken) {
+    throw new ApiError('Login response did not include an access token', 500)
+  }
+
+  return {
+    accessToken,
+    user: user ?? null,
+  }
+}
 
 export const useLoginApi = () => {
   // Generic kedua (TVariables) otomatis terbaca dari tipe parameter loginUser
   return useAppMutation({
     mutationFn: loginUser,
-    customSuccessMessage: 'Berhasil Login !!!',
+    customSuccessMessage: 'Login successful',
     customErrorMessage: 'Gagal Login !!!',
-    errorOnToast: true,
-    onSuccess: (data) => {
-      // Response login kemungkinan berisi token, jadi hanya log saat development
-      console.log(data)
-    },
   })
 }
