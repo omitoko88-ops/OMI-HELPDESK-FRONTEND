@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react'
-import type { AppendLog, LoginStatus, ShowMessage } from '../types'
+import type { AppendLog, ShowMessage } from '../types'
 import { useLoginApi } from './Api/useLoginApi'
 import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router'
 
 // Lama jeda (ms) antara "Access Granted" dan pindah halaman
-const REDIRECT_DELAY_MS = 1500
+const REDIRECT_DELAY_MS = 15000
 
 interface UseLoginOptions {
   appendLog: AppendLog
@@ -28,13 +28,13 @@ export function useLogin({ appendLog, showMessage }: UseLoginOptions) {
     }
   }, [])
 
-  // Status 'success' tetap aktif selama delay (isSuccess tidak reset sendiri),
-  // jadi tombol login bisa tetap di-disable sampai pindah halaman
-  const status: LoginStatus = loginApi.isPending
-    ? 'loading'
-    : loginApi.isSuccess
-      ? 'success'
-      : 'idle'
+  // // Status 'success' tetap aktif selama delay (isSuccess tidak reset sendiri),
+  // // jadi tombol login bisa tetap di-disable sampai pindah halaman
+  // const status: LoginStatus = loginApi.isPending
+  //   ? 'loading'
+  //   : loginApi.isSuccess
+  //     ? 'success'
+  //     : 'idle'
 
   const { mutate } = loginApi
 
@@ -79,5 +79,5 @@ export function useLogin({ appendLog, showMessage }: UseLoginOptions) {
     [appendLog, showMessage, mutate, setToken, navigate],
   )
 
-  return { status, login }
+  return { loginApi, login }
 }

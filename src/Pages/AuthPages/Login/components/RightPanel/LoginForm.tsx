@@ -12,6 +12,7 @@ import { FormField } from './FormField'
 import { InputField } from './InputField'
 import { SubmitButton } from './SubmitButton'
 import { useAuthContext } from '../../context/AuthContext'
+import { IconInput } from '@/components/inputs'
 
 interface LoginFormProps {
   status: LoginStatus
@@ -22,17 +23,13 @@ interface LoginFormProps {
 /** Form login: alias/email, password (bisa di-toggle), remember me, dan tombol submit. */
 export function LoginForm() {
   const {
-    status,
     showPassword,
     setShowPassword,
     rememberMe,
     setRememberMe,
     handleSubmit,
     handleForgotPassword,
-    password,
-    setPassword,
-    username,
-    setUsername,
+    LoginFormMethods,
   } = useAuthContext()
 
   return (
@@ -45,14 +42,9 @@ export function LoginForm() {
           <span className="font-mono text-xs text-geek-accent">[Required]</span>
         }
       >
-        <InputField
+        <IconInput
           id="username"
-          type="text"
-          required
-          autoComplete="username"
-          placeholder="e.g. neo@zion.net or linus_torvalds"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          control={LoginFormMethods.control}
           icon={<FaTerminal className="text-xs" />}
         />
       </FormField>
@@ -71,15 +63,12 @@ export function LoginForm() {
           </button>
         }
       >
-        <InputField
+        <IconInput
           id="password"
-          type={showPassword ? 'text' : 'password'}
-          required
-          autoComplete="current-password"
-          placeholder="••••••••••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          control={LoginFormMethods.control}
           icon={<FaLock className="text-xs" />}
+          placeholder="••••••••••••••••"
+          autoComplete="current-password"
           trailing={
             <button
               type="button"
@@ -120,7 +109,7 @@ export function LoginForm() {
         </div>
       </div>
 
-      <SubmitButton status={status} />
+      <SubmitButton />
     </form>
   )
 }

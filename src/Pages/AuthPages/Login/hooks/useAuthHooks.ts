@@ -2,22 +2,36 @@ import { FormEvent, useState } from 'react'
 import { useAlert } from './useAlert'
 import { useTerminal } from './useTerminal'
 import { useLogin } from './useLogin'
+import { TerminalFormValues } from '../components/LeftPanel/TerminalConsole'
+import { useForm } from 'react-hook-form'
 
 export function useAuthHooks() {
   const [matrixActive, setMatrixActive] = useState(true)
   const toggleMatrix = () => setMatrixActive((prev) => !prev)
 
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    // Cegah submit ganda saat proses login masih berjalan
-    if (status !== 'idle') return
-    login(username, password)
+  const TerminalFormMethods = useForm<TerminalFormValues>({
+    defaultValues: {
+      command: '',
+    },
+  })
+
+  const LoginFormMethods = useForm<{ username: string; password: string }>({
+    defaultValues: {
+      username: '',
+      password: '',
+    },
+  })
+
+  // Handler yang dipanggil HANYA kalau validasi react-hook-form lolos.
+  // `values` berisi { username, password } dari form.
+  const onValidSubmit = (values: { username: string; password: string }) => {
+    console.log('submit', values)
+    login(values.username, values.password)
   }
+  const handleSubmit = LoginFormMethods.handleSubmit(onValidSubmit)
 
   const { alert, showMessage } = useAlert()
 
@@ -26,7 +40,7 @@ export function useAuthHooks() {
     onToggleMatrix: toggleMatrix,
   })
 
-  const { status, login } = useLogin({ appendLog, showMessage })
+  const { loginApi, login } = useLogin({ appendLog, showMessage })
 
   // Tombol "Matrix Rain" di panel kanan: toggle + tampilkan pesan status
   const handleMatrixButton = () => {
@@ -63,7 +77,7 @@ export function useAuthHooks() {
     appendLog,
     runCommand,
     showTrivia,
-    status,
+    loginApi,
     login,
     handleMatrixButton,
     handleForgotPassword,
@@ -74,9 +88,7 @@ export function useAuthHooks() {
     rememberMe,
     setRememberMe,
     handleSubmit,
-    password,
-    setPassword,
-    username,
-    setUsername,
+    TerminalFormMethods,
+    LoginFormMethods,
   }
 }
