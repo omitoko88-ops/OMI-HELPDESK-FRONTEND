@@ -24,12 +24,10 @@ import {
   Link,
   MessageSquare,
   Type,
-  AlignLeft,
   Image as ImageIcon,
   List,
   Undo,
   Redo,
-  Dot,
 } from 'lucide-react'
 import { MoreDotIcon } from '@/icons'
 

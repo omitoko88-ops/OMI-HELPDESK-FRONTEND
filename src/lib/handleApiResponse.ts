@@ -11,12 +11,12 @@ export function handleApiResponse<T>(
 
     if (typeof message === 'string') {
       console.log('handleApiResponse PESAN')
-      throw new ApiError(message, code)
+      throw new ApiError(code, message)
     }
 
     // Jika message adalah objek field errors
     console.log('handleApiResponse FIELD')
-    throw new ApiError(defaultMessage, code, message)
+    throw new ApiError(code, defaultMessage, message)
   }
 
   return response
@@ -49,8 +49,8 @@ export function toApiError(
 
     // ERROR AXIOS TAPI BUKAN DARI API MASUK KESINI KARNA GADAK META RESPON NYA
     throw new ApiError(
-      error.response?.statusText || `${defaultMessage}. ${error.message}`,
       error.response?.status || 500,
+      error.response?.statusText || `${defaultMessage}. ${error.message}`,
     )
   }
 
@@ -60,9 +60,9 @@ export function toApiError(
       'parsingApiResponse INSTANCE ERROR BUKAN AXIOS BUKAN APIERROR',
       error,
     )
-    throw new ApiError(error.message)
+    throw new ApiError(500, error.message)
   }
 
   console.log('parsingApiResponse DEFAULT MESSAGE')
-  throw new ApiError(defaultMessage)
+  throw new ApiError(500, defaultMessage)
 }

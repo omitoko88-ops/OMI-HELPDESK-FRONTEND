@@ -1,21 +1,39 @@
-import type { Workspace } from '../../types';
-import { Brand } from './Brand';
-import { WorkspaceSwitcher } from './WorkspaceSwitcher';
-import { SearchBar } from './SearchBar';
-import { UserMenu } from './UserMenu';
+import type { DocNode, Workspace } from '../../types'
+import { Brand } from './Brand'
+import { WorkspaceSwitcher } from './WorkspaceSwitcher'
+import { SearchBar } from './SearchBar'
+import { UserMenu } from './UserMenu'
 
 interface HeaderProps {
-  workspaces: Workspace[];
-  activeWorkspace: Workspace;
-  onSelectWorkspace: (workspaceId: string) => void;
-  onCreateWorkspace: () => void;
+  workspaces: Workspace[]
+  activeWorkspace: Workspace | null
+  docs: DocNode[]
+  memberCount: number
+  accessLabel: string
+  onSelectWorkspace: (workspaceId: string) => void
+  onCreateWorkspace: () => void
+  onRenameWorkspace: (workspace: Workspace) => void
+  onDeleteWorkspace: (workspace: Workspace) => void
+  onLeaveWorkspace: (workspace: Workspace) => void
+  isMutating?: boolean
 }
 
 /** Sticky top navigation bar: brand + workspace switcher | search | user area. */
-export function Header({ workspaces, activeWorkspace, onSelectWorkspace, onCreateWorkspace }: HeaderProps) {
+export function Header({
+  workspaces,
+  activeWorkspace,
+  docs,
+  memberCount,
+  accessLabel,
+  onSelectWorkspace,
+  onCreateWorkspace,
+  onRenameWorkspace,
+  onDeleteWorkspace,
+  onLeaveWorkspace,
+  isMutating,
+}: HeaderProps) {
   return (
     <header className="h-14 border-b border-geek-border bg-white px-4 flex items-center justify-between z-30 sticky top-0 shadow-sm">
-      {/* Left: brand + workspace switcher */}
       <div className="flex items-center gap-4">
         <Brand />
         <span className="text-slate-300 font-mono">/</span>
@@ -24,14 +42,16 @@ export function Header({ workspaces, activeWorkspace, onSelectWorkspace, onCreat
           activeWorkspace={activeWorkspace}
           onSelect={onSelectWorkspace}
           onCreate={onCreateWorkspace}
+          onRename={onRenameWorkspace}
+          onDelete={onDeleteWorkspace}
+          onLeave={onLeaveWorkspace}
+          isMutating={isMutating}
         />
       </div>
 
-      {/* Center: global search */}
-      <SearchBar />
+      <SearchBar docs={docs} workspaceId={activeWorkspace?.id} />
 
-      {/* Right: members + current user */}
-      <UserMenu />
+      <UserMenu memberCount={memberCount} accessLabel={accessLabel} />
     </header>
-  );
+  )
 }

@@ -1,8 +1,7 @@
 import { ApiResponse } from "@/interfaces/ApiResponse";
-import { Documentation } from "@/interfaces/Documentation";
 import { Version } from "@/interfaces/Version";
 import { api } from "@/lib/axios";
-import { handleApiResponse, parsingApiResponse } from "@/lib/handleApiResponse";
+import { handleApiResponse, toApiError } from "@/lib/handleApiResponse";
 
 export const getVersions = async (): Promise<Version[]> => {
   try {
@@ -18,6 +17,6 @@ export const getVersions = async (): Promise<Version[]> => {
     return res.data.data;
   } catch (error) {
     console.log("error");
-    throw parsingApiResponse(error, "Gagal get version, silakan coba lagi");
+    throw toApiError(error, "Gagal get version, silakan coba lagi");
   }
 };

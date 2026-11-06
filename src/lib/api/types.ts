@@ -1,73 +1,69 @@
 // =====================================================================
-// Tipe DTO yang dipakai frontend.
-// CATATAN: bentuk persis DTO diambil dari ARCHITECTURE.md. Bila ada field
-// yang berbeda di backend Anda, cukup sesuaikan di SINI (satu tempat).
+// Tipe DTO frontend, diselaraskan dengan OMI-HELPDESK-API.
+// Semua ID adalah HashId (string), bukan angka, dan response API dibuka
+// dari envelope { meta, data } oleh lib/api/client.ts.
 // =====================================================================
 
 export type WorkspaceRole = 'Editor' | 'Viewer'
-
-// Level akses = cerminan enum WorkspaceAccess di backend (None/Read/Write/Owner)
-export type WorkspaceAccess = 'none' | 'read' | 'write' | 'owner'
+export type ShareRole = 'Viewer' | 'Editor'
 
 export interface WorkspaceDto {
-  id: number
+  id: string
   name: string
-  ownerId: number
   createdAt: string
 }
 
+export interface UserWorkspacesResponse {
+  ownedWorkspaces: WorkspaceDto[]
+  joinedWorkspaces: WorkspaceDto[]
+}
+
 export interface MemberUser {
-  id: number
+  id: string
   username: string
   email: string
 }
 
 export interface WorkspaceMemberDto {
-  id: number // memberId (dipakai di PUT/DELETE), BUKAN userId
-  userId: number
+  id: string
+  workspaceId: string
+  userId: string
   username: string
   email: string
   role: WorkspaceRole
   joinedAt: string
 }
 
-// GET /api/workspaces/{id}/members -> "Owner + daftar anggota"
 export interface MembersResponse {
   owner: MemberUser
   members: WorkspaceMemberDto[]
 }
 
-// Item daftar dokumen (tanpa isi)
 export interface DocumentListItemDto {
-  id: number
-  parentId: number | null
+  id: string
+  workspaceId: string
+  parentId: string | null
   title: string
+  createdById: string
+  createdAt: string
   updatedAt: string
 }
 
-// Node pohon untuk sidebar
 export interface DocumentTreeNode {
-  id: number
-  parentId: number | null
+  id: string
+  parentId: string | null
   title: string
   children: DocumentTreeNode[]
 }
 
-export interface DocumentDto {
-  id: number
-  workspaceId: number
-  parentId: number | null
-  title: string
-  content: string
-  createdById: number
-  createdAt: string
-  updatedAt: string
+export interface DocumentDto extends DocumentListItemDto {
+  content: string | null
 }
 
 export interface CreateDocumentInput {
   title: string
   content?: string
-  parentId?: number | null
+  parentId?: string | null
 }
 
 export interface UpdateDocumentInput {
@@ -75,13 +71,14 @@ export interface UpdateDocumentInput {
   content: string
 }
 
-// ---- Share via link ----
-export type ShareRole = 'Viewer' | 'Editor'
+export interface MoveDocumentInput {
+  parentId: string | null
+}
 
 export interface DocumentShareDto {
-  token: string | null // null bila link belum pernah dibuat
-  role: ShareRole
   isEnabled: boolean
+  token: string | null
+  role: ShareRole
   expiresAt: string | null
 }
 
@@ -91,23 +88,30 @@ export interface UpsertShareInput {
   expiresAt: string | null
 }
 
-// ---- Publik (via token) ----
-// Sengaja tanpa WorkspaceId / CreatedById (lihat ARCHITECTURE.md bagian 9)
 export interface PublicDocumentDto {
-  id: number
-  parentId: number | null
+  id: string
+  parentId: string | null
   title: string
-  content: string
+  content: string | null
   updatedAt: string
 }
 
 export interface PublicShareResponse {
   document: PublicDocumentDto
-  tree: DocumentTreeNode[] // sub-halaman di bawah dokumen yang dibagikan
+  tree: DocumentTreeNode
   role: ShareRole
   canEdit: boolean
 }
 
+export interface UploadResponse {
+  url: string
+}
+
 export interface LoginResponse {
+  message?: string
   token: string
+}
+
+export interface CurrentUserResponse {
+  message: string
 }

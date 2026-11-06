@@ -1,38 +1,13 @@
 import { Editor } from '@tiptap/react'
-import { HexColorPicker } from 'react-colorful'
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  List,
-  ListOrdered,
-  Heading,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Table as TableIcon,
-  Trash2,
-  CheckSquare,
-  Image as ImageIcon,
-  Lightbulb,
-  Folder,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useState } from 'react'
-import ColorPicker from '@/components/common/CustomColorPicker'
 import { BadgeInsertButton } from './Buttons/BadgeInsertButton'
 import { SeparatorButton } from './Buttons/SeparatorButton'
 import { TipInsertButton } from './Buttons/TipInsertButton'
 import { BoldButton } from './Buttons/BoldButton'
 import { ItalicButton } from './Buttons/ItalicButton'
 import { StrikeButton } from './Buttons/StrikeButton'
-import { CodeButton } from './Buttons/CodeButton'
 import { HeadingButtons } from './Buttons/HeadingButtons'
-import { ListButtons } from './Buttons/ListButtons'
 import { AlignButtons } from './Buttons/AlignButtons'
 import { TableButtons } from './Buttons/TableButtons'
-import { ImageUploadButton } from './Buttons/ImageUploadButton'
 import { CodeTabsInsertButton } from './Buttons/CodeTabsButton'
 import { TabsInsertButton } from './Buttons/TabsButton'
 import { PdfInsertButton } from './Buttons/PdfInsertButton'

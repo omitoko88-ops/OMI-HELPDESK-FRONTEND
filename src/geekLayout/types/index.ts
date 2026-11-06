@@ -1,65 +1,62 @@
 /**
- * Shared TypeScript types for the whole dashboard.
- * Keeping them in one file makes it easy to see the app's data model at a glance.
+ * Model tampilan yang dipakai lintas komponen dashboard.
+ * Data aslinya berasal dari DTO API (HashId string).
  */
 
 /** A workspace the user can switch between (shown in the header dropdown). */
 export interface Workspace {
-  id: string;
-  /** Short name shown inside the dropdown list, e.g. "Quantum Lab". */
-  name: string;
-  /** Longer label shown on the dropdown button, e.g. "Quantum Lab (Team)". */
-  label: string;
-  /** FontAwesome icon name without the "fa-" prefix. */
-  icon: string;
-  /** Tailwind class that colors the icon. */
-  iconClass: string;
-  /** Pill text on the right, e.g. "4 members". */
-  badge: string;
-  /** Tailwind classes that color the pill. */
-  badgeClass: string;
+  id: string
+  name: string
+  label: string
+  icon: string
+  iconClass: string
+  badge: string
+  badgeClass: string
+  /** owner = dibuat oleh user, member = workspace yang diikuti. */
+  relation: 'owner' | 'member'
 }
 
-/**
- * A node in the sidebar document tree.
- * - If `children` is defined, the node is a "parent" (collapsible + can add children).
- * - If `children` is undefined, the node is a leaf document.
- */
+/** A node in the sidebar document tree. */
 export interface DocNode {
-  id: string;
-  title: string;
-  icon: string;
-  iconClass: string;
-  children?: DocNode[];
-  /** Only relevant for parents: whether the child list is visible. */
-  expanded?: boolean;
+  id: string
+  parentId: string | null
+  title: string
+  icon: string
+  iconClass: string
+  updatedAt?: string
+  children?: DocNode[]
+  expanded?: boolean
 }
 
-/** Who can open a document through its share link. */
-export type LinkRole = 'viewer' | 'editor' | 'restricted';
+/** Dokumen yang sedang dipilih untuk modal share/editor. */
+export interface ShareTarget {
+  id: string
+  title: string
+}
 
-/** Role of an individual collaborator inside the workspace. */
-export type MemberRole = 'owner' | 'editor' | 'viewer';
+export type { ShareRole } from '@/lib/api/types'
+export type WorkspaceRole = 'Editor' | 'Viewer'
+export type MemberRole = 'owner' | 'editor' | 'viewer'
 
-/** A person listed in the "Workspace Collaborators Access" section of the modal. */
+/** Keanggotaan efektif user pada workspace aktif. */
+export type WorkspaceAccess = 'owner' | 'editor' | 'viewer' | 'none'
+
 export interface Collaborator {
-  username: string;
-  /** Secondary line: an email address or a job title. */
-  subtitle: string;
-  avatarUrl: string;
-  role: MemberRole;
+  id: string
+  userId: string
+  username: string
+  email: string
+  role: MemberRole
+  joinedAt?: string
 }
 
-/** A link card at the bottom of the document ("Sub-Pages"). */
 export interface ChildPage {
-  fileName: string;
-  description: string;
+  fileName: string
+  description: string
 }
 
-/** One line of the JSON preview in the code block. */
 export interface JsonEntry {
-  key: string;
-  value: string | number;
-  /** Controls the syntax-highlight color of the value. */
-  kind: 'string' | 'secret' | 'number';
+  key: string
+  value: string | number
+  kind: 'string' | 'secret' | 'number'
 }

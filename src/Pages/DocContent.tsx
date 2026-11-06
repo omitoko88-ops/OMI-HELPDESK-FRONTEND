@@ -38,11 +38,7 @@ export const DocContent = () => {
       <input
         // value={'title'}
         disabled={false}
-        onChange={(event) => {
-          const nextTitle = event.target.value
-          // setTitle(nextTitle)
-          // onTitleChange(nextTitle)
-        }}
+        onChange={() => undefined}
         placeholder="Untitled"
         className="w-full bg-transparent text-5xl font-bold outline-none"
       />

@@ -1,4 +1,3 @@
-import { Documentation } from "@/interfaces/Documentation";
 import { Version } from "@/interfaces/Version";
 import { ApiError } from "@/lib/ApiError";
 import { getVersions } from "@/service/getVersions";

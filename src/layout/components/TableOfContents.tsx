@@ -1,5 +1,4 @@
 import { TocItem } from '@/lib/parseToc'
-import { useActiveVersion } from '@/stores/versionStore'
 import clsx from 'clsx'
 import { Sparkles } from 'lucide-react'
 

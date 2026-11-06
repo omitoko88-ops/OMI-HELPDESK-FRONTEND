@@ -1,46 +1,51 @@
-import { BrowserRouter, Route, Routes } from 'react-router'
-import { ScrollToTop } from './components/common/ScrollToTop'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { Toaster } from 'sonner'
-import AuthProvider from './contexts/AuthProvider'
-import { queryClient } from './lib/queryClient'
-import { ThemeProvider } from './components/theme-provider'
-import { DocContent } from './Pages/DocContent'
-import { TableContentProvider } from './contexts/TableContentContext'
-// import { DocEditor } from "./Pages/best/page/DocEditor";
-import { DocEditor } from './Pages/DocEditor'
-import Example from './Pages/Example'
-import GeekLayout from './geekLayout/GeekLayout'
-import LoginPage from './Pages/AuthPages/Login/LoginPage'
-import RegisterPage from './Pages/AuthPages/Register/RegisterPage'
-// import { Layout } from "./layout/pages/Navbar";
+import { BrowserRouter, Route, Routes } from "react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
+import AuthProvider from "./contexts/AuthProvider";
+import { queryClient } from "./lib/queryClient";
+import { ThemeProvider } from "./components/theme-provider";
+import { TableContentProvider } from "./contexts/TableContentContext";
+import { ScrollToTop } from "./components/common/ScrollToTop";
+import { DocEditor } from "./Pages/DocEditor";
+import Example from "./Pages/Example";
+import GeekLayout from "./geekLayout/GeekLayout";
+import { Home } from "./Pages/Dashboard/pages/Home";
+import LoginPage from "./Pages/AuthPages/Login/LoginPage";
+import RegisterPage from "./Pages/AuthPages/Register/RegisterPage";
+import { DocumentPage, DocumentsIndexPage } from "./geekLayout/pages/DocumentPage";
+import { PublicDocumentPage } from "./geekLayout/pages/PublicDocumentPage";
+import { WorkspaceMembersPage } from "./geekLayout/pages/WorkspaceMembersPage";
 
 function App() {
   return (
-    <>
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
-          <TableContentProvider>
-            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-              <Toaster position="top-center" />
-              <ScrollToTop />
-              <Routes>
-                <Route element={<AuthProvider />}>
-                  <Route element={<GeekLayout />}>
-                    <Route index path="/" element={<DocContent />} />
-                    <Route index path="/edit" element={<DocEditor />} />
-                  </Route>
-                  <Route index path="/example" element={<Example />} />
-                  <Route index path="/login" element={<LoginPage />} />
-                  <Route index path="/register" element={<RegisterPage />} />
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <TableContentProvider>
+          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+            <Toaster position="top-center" />
+            <ScrollToTop />
+            <Routes>
+              <Route element={<AuthProvider />}>
+                <Route element={<GeekLayout />}>
+                  <Route index element={<Home />} />
+                  <Route path="/dashboard" element={<Home />} />
+                  <Route path="/docs" element={<DocumentsIndexPage />} />
+                  <Route path="/docs/:documentId" element={<DocumentPage />} />
+                  <Route path="/members" element={<WorkspaceMembersPage />} />
+                  <Route path="/edit" element={<DocEditor />} />
+                  <Route path="/edit/:documentId" element={<DocEditor />} />
                 </Route>
-              </Routes>
-            </ThemeProvider>
-          </TableContentProvider>
-        </QueryClientProvider>
-      </BrowserRouter>
-    </>
-  )
+                <Route path="/example" element={<Example />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+              </Route>
+              <Route path="/share/:token" element={<PublicDocumentPage />} />
+            </Routes>
+          </ThemeProvider>
+        </TableContentProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

@@ -1,7 +1,7 @@
 import { FieldValues, Path, UseFormSetError } from 'react-hook-form'
 import { ApiError } from './ApiError'
 import { toast } from 'sonner'
-import { CheckCircle, X } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface SetErrorOptions<T extends FieldValues> {
   setError?: UseFormSetError<T>
@@ -30,8 +30,8 @@ export function setErrorFromApi<T extends FieldValues>(
   }
 
   // Gabungkan semua pesan field jadi satu string (dipakai untuk toast)
-  const fieldMessages = error.fields
-    ? Object.values(error.fields).flat().join(', ')
+  const fieldMessages = error.errors
+    ? Object.values(error.errors).flat().join(', ')
     : ''
 
   // Kasus 1: dipaksa toast, atau tidak ada handler form
@@ -41,7 +41,7 @@ export function setErrorFromApi<T extends FieldValues>(
   }
 
   // Kasus 2: tidak ada field errors, tampilkan pesan umum
-  if (!error.fields) {
+  if (!error.errors) {
     showToast(error.message || fallback)
     return
   }
@@ -49,7 +49,7 @@ export function setErrorFromApi<T extends FieldValues>(
   // Kasus 3: ada field errors + form handler
   const unmatched: string[] = []
 
-  Object.entries(error.fields).forEach(([field, messages]) => {
+  Object.entries(error.errors).forEach(([field, messages]) => {
     // Hanya field yang ada di form yang akan menampilkan error;
     // sisanya dikumpulkan agar tidak hilang diam-diam
     if (field in (setError as any).__fields) {

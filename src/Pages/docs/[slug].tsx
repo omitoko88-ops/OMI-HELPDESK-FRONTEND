@@ -1,10 +1,10 @@
 import { dummyDoc } from "@/assets/data";
-import { extractToc } from "@/lib/parseToc";
+import { extractTocFromHtml } from "@/lib/parseToc";
 import { DocContent } from "../DocContent";
 import { TableOfContents } from "@/layout/components/TableOfContents";
 
 export default function DocPage() {
-  const toc = extractToc(dummyDoc.content);
+  const toc = extractTocFromHtml(dummyDoc.content);
 
   return (
     <div className="flex max-w-screen-xl mx-auto">

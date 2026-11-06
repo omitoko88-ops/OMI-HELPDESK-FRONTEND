@@ -24,17 +24,16 @@ export function useRegister({
       if (isPending) return
 
       const payload: RegisterPayload = {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        countryCode: values.countryCode,
-        phoneNumber: values.phoneNumber,
+        username: values.username,
+        email: values.email,
         password: values.password,
+        confirmPassword: values.confirmPassword,
       }
 
       clearMessage()
       mutate(payload, {
         onError: (error) => {
-          if (error.fields) onFieldErrors?.(error.fields)
+          if (error.errors) onFieldErrors?.(error.errors)
           showMessage(error.message, 'error')
         },
         onSuccess: () => {

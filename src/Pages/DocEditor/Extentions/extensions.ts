@@ -44,7 +44,7 @@ export const createEditorExtensions = () => [
 
   PdfViewer.configure({
     upload: uploadPdf,
-    maxSizeMB: 20,
+    maxSizeMB: 10,
   }),
 
   TextAlign.configure({

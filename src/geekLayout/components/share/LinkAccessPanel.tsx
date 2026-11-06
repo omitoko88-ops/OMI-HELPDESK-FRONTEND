@@ -1,78 +1,201 @@
-import { useEffect, useRef, useState } from 'react';
-import type { LinkRole } from '../../types';
-import { LINK_ROLE_CONFIG, LINK_ROLE_ORDER, buildShareUrl } from '../../utils/shareLinks';
-import { Icon } from '../ui/Icon';
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import type { ShareRole } from '@/lib/api/types'
+import { useDocumentShare, useShareMutations } from '../../hooks/useDocumentQueries'
+import { Icon } from '../ui/Icon'
 
 interface LinkAccessPanelProps {
-  role: LinkRole;
-  onRoleChange: (role: LinkRole) => void;
+  documentId: string
+  canWrite: boolean
 }
 
-/** Role dropdown + read-only share URL with a copy button. */
-export function LinkAccessPanel({ role, onRoleChange }: LinkAccessPanelProps) {
-  const [copied, setCopied] = useState(false);
-  const timeoutRef = useRef<number>();
+export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) {
+  const shareQuery = useDocumentShare(documentId, canWrite)
+  const { save, regenerate, remove, shareUrl } = useShareMutations(documentId)
+  const [role, setRole] = useState<ShareRole>('Viewer')
+  const [expiresAt, setExpiresAt] = useState('')
+  const [copied, setCopied] = useState(false)
 
-  // The URL is derived from the role – no manual DOM updates needed.
-  const shareUrl = buildShareUrl(role);
+  useEffect(() => {
+    if (!shareQuery.data) return
+    setRole(shareQuery.data.role)
+    setExpiresAt(shareQuery.data.expiresAt?.slice(0, 16) ?? '')
+  }, [shareQuery.data])
 
-  // Clear any pending "Copied!" timer when the component unmounts.
-  useEffect(() => () => window.clearTimeout(timeoutRef.current), []);
+  const isEnabled = shareQuery.data?.isEnabled ?? false
+  const token = shareQuery.data?.token ?? null
+  const url = shareUrl(token)
+  const isBusy = save.isPending || regenerate.isPending || remove.isPending
 
-  const handleCopy = async () => {
+  const upsert = async (next: {
+    isEnabled?: boolean
+    role?: ShareRole
+    expiresAt?: string | null
+  }) => {
     try {
-      // Modern Clipboard API (replaces the deprecated document.execCommand('copy')).
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      // Inline feedback instead of the original blocking alert().
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      window.alert('Could not copy automatically – please copy the link manually.');
+      await save.mutateAsync({
+        isEnabled: next.isEnabled ?? isEnabled,
+        role: next.role ?? role,
+        expiresAt:
+          next.expiresAt !== undefined
+            ? next.expiresAt
+            : expiresAt
+              ? new Date(expiresAt).toISOString()
+              : null,
+      })
+      toast.success('Pengaturan link disimpan.')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal menyimpan link.')
     }
-  };
+  }
+
+  const copy = async () => {
+    if (!url) return
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      window.alert(`Salin URL berikut:\n${url}`)
+    }
+  }
+
+  if (!canWrite) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-[11px] text-amber-800">
+        Hanya owner atau editor workspace yang dapat mengatur link publik.
+      </div>
+    )
+  }
+
+  if (shareQuery.isLoading) {
+    return <div className="h-28 animate-pulse rounded-xl bg-slate-100" />
+  }
+
+  if (shareQuery.isError) {
+    return (
+      <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-[11px] text-rose-700">
+        {shareQuery.error instanceof Error
+          ? shareQuery.error.message
+          : 'Gagal memuat pengaturan link publik.'}
+      </div>
+    )
+  }
 
   return (
-    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Icon name="link" className="text-geek-cyan text-sm" />
+          <Icon name="link" className="text-sm text-geek-cyan" />
           <div>
-            <div className="font-bold text-slate-800">Link Access Permission</div>
-            <div className="text-[10px] text-slate-500">Configured default access level for anyone with link</div>
+            <div className="font-bold text-slate-800">Public Link Access</div>
+            <div className="text-[10px] text-slate-500">
+              Siapa pun dengan link dapat mengakses dokumen ini
+            </div>
           </div>
         </div>
 
-        {/* Controlled select: value comes from state, changes bubble up */}
-        <select
-          value={role}
-          onChange={(event) => onRoleChange(event.target.value as LinkRole)}
-          className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-geek-cyan"
-        >
-          {LINK_ROLE_ORDER.map((key) => (
-            <option key={key} value={key}>
-              {LINK_ROLE_CONFIG[key].optionLabel}
-            </option>
-          ))}
-        </select>
+        <label className="flex cursor-pointer items-center gap-2 text-[11px] font-bold text-slate-700">
+          <input
+            type="checkbox"
+            checked={isEnabled}
+            disabled={isBusy}
+            onChange={(event) => void upsert({ isEnabled: event.target.checked })}
+            className="h-3.5 w-3.5 accent-emerald-600"
+          />
+          {isEnabled ? 'Active' : 'Disabled'}
+        </label>
       </div>
 
-      {/* Shareable URL */}
-      <div className="flex items-center gap-2 pt-1">
+      <div className="grid grid-cols-2 gap-2">
+        <label className="space-y-1">
+          <span className="block text-[10px] font-bold uppercase text-slate-500">Role</span>
+          <select
+            value={role}
+            disabled={isBusy}
+            onChange={(event) => {
+              const nextRole = event.target.value as ShareRole
+              setRole(nextRole)
+              void upsert({ role: nextRole })
+            }}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-geek-cyan"
+          >
+            <option value="Viewer">Viewer (Read Only)</option>
+            <option value="Editor">Editor (Can Modify)</option>
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="block text-[10px] font-bold uppercase text-slate-500">Expires</span>
+          <input
+            type="datetime-local"
+            value={expiresAt}
+            disabled={isBusy}
+            onChange={(event) => {
+              setExpiresAt(event.target.value)
+              void upsert({
+                expiresAt: event.target.value
+                  ? new Date(event.target.value).toISOString()
+                  : null,
+              })
+            }}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-geek-cyan"
+          />
+        </label>
+      </div>
+
+      <div className="flex items-center gap-2">
         <input
           type="text"
           readOnly
-          value={shareUrl}
-          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-[11px] text-slate-600 select-all"
+          value={url || (token ? 'Link dinonaktifkan' : 'Aktifkan untuk membuat token')}
+          className="w-full select-all rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] text-slate-600"
         />
         <button
           type="button"
-          onClick={handleCopy}
-          className="px-3 py-1.5 bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 transition-all shrink-0"
+          onClick={() => void copy()}
+          disabled={!url || !isEnabled}
+          className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 font-bold text-white transition-colors hover:bg-slate-800 disabled:opacity-40"
         >
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500">
+        <span className="max-w-[60%] truncate font-mono">
+          Token: {token ?? 'belum dibuat'}
+        </span>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (!window.confirm('Token lama akan langsung tidak berlaku. Lanjutkan?')) return
+              void regenerate
+                .mutateAsync()
+                .then(() => toast.success('Token berhasil dibuat ulang.'))
+                .catch((error: Error) => toast.error(error.message))
+            }}
+            disabled={!token || isBusy}
+            className="font-bold text-geek-secondary hover:underline disabled:opacity-40"
+          >
+            Regenerate
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (!window.confirm('Hapus pengaturan link berbagi?')) return
+              void remove
+                .mutateAsync()
+                .then(() => toast.success('Link berbagi dihapus.'))
+                .catch((error: Error) => toast.error(error.message))
+            }}
+            disabled={!token || isBusy}
+            className="font-bold text-rose-600 hover:underline disabled:opacity-40"
+          >
+            Delete link
+          </button>
+        </div>
+      </div>
     </div>
-  );
+  )
 }

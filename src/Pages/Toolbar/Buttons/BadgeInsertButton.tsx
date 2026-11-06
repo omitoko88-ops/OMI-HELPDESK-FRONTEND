@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import ColorPicker from '@/components/common/CustomColorPicker'
 import { ToolbarButtonProps } from '../types'
-import { Badge, BadgeAlert } from 'lucide-react'
+import { BadgeAlert } from 'lucide-react'
 
 export const BadgeInsertButton = ({ editor }: ToolbarButtonProps) => {
   const [hexColor, setHexColor] = useState('#7af441')
-  const [label, setLabel] = useState('New')
+  const label = 'New'
 
   return (
     <div className="flex gap-1">

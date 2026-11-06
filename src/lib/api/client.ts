@@ -1,8 +1,14 @@
 import { ApiError } from './ApiError'
 import { useAuthStore } from '@/stores/authStore'
 
-// Isi VITE_API_URL di .env, contoh: VITE_API_URL=https://localhost:7001
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
+const configuredBaseUrl = import.meta.env.VITE_API_URL as string | undefined
+const developmentBaseUrl = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL_DEV as string | undefined)
+  : undefined
+
+// Production harus memakai VITE_API_URL (atau origin yang sama). Fallback
+// localhost hanya aktif saat development agar build produksi tidak salah arah.
+const BASE_URL = (configuredBaseUrl ?? developmentBaseUrl ?? '').replace(/\/$/, '')
 
 type Query = Record<string, string | number | boolean | null | undefined>
 
@@ -11,27 +17,72 @@ interface RequestOptions {
   body?: unknown
   query?: Query
   signal?: AbortSignal
-  // false untuk endpoint publik / login (tanpa header Authorization)
   auth?: boolean
+  formData?: boolean
+}
+
+interface ApiEnvelope<T> {
+  meta?: {
+    success: boolean
+    code: number
+    message: string | string[] | Record<string, string[]>
+  }
+  data?: T
 }
 
 function buildUrl(path: string, query?: Query) {
   const qs = new URLSearchParams()
-  Object.entries(query ?? {}).forEach(([k, v]) => {
-    // Lewati nilai kosong agar tidak mengirim "?search=undefined"
-    if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
+  Object.entries(query ?? {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      qs.set(key, String(value))
+    }
   })
-  const s = qs.toString()
-  return `${BASE_URL}${path}${s ? `?${s}` : ''}`
+  const suffix = qs.toString()
+  return `${BASE_URL}${path}${suffix ? `?${suffix}` : ''}`
 }
 
-// Satu pintu untuk semua request: pasang JWT, parse ApiError, tangani 401.
+function errorFromResponse(
+  status: number,
+  payload: unknown,
+  fallback: string,
+): ApiError {
+  const envelope =
+    payload && typeof payload === 'object' && 'meta' in payload
+      ? (payload as ApiEnvelope<unknown>)
+      : null
+  const message = envelope?.meta?.message
+  if (Array.isArray(message)) {
+    return new ApiError(status, fallback, { _: message })
+  }
+  if (message && typeof message === 'object') {
+    return new ApiError(status, fallback, message as Record<string, string[]>)
+  }
+  if (typeof message === 'string' && message.length > 0) {
+    return new ApiError(status, message)
+  }
+
+  // Some middleware (401/403 JWT) writes ApiError directly without an envelope.
+  const direct = (payload as { message?: unknown } | null)?.message
+  if (typeof direct === 'string' && direct.length > 0) {
+    return new ApiError(status, direct)
+  }
+  return new ApiError(status, fallback)
+}
+
+// Satu pintu request: JWT, envelope { meta, data }, dan error validasi.
 export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, query, signal, auth = true } = opts
+  const {
+    method = 'GET',
+    body,
+    query,
+    signal,
+    auth = true,
+    formData = false,
+  } = opts
   const token = useAuthStore.getState().token
 
   const headers: Record<string, string> = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (body !== undefined && !formData) headers['Content-Type'] = 'application/json'
   if (auth && token) headers.Authorization = `Bearer ${token}`
 
   let res: Response
@@ -39,29 +90,56 @@ export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T
     res = await fetch(buildUrl(path, query), {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body:
+        body === undefined
+          ? undefined
+          : formData
+            ? (body as FormData)
+            : JSON.stringify(body),
       signal,
     })
-  } catch (e) {
-    // Request dibatalkan react-query (ganti halaman) -> biarkan lewat apa adanya
-    if (e instanceof DOMException && e.name === 'AbortError') throw e
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ApiError(0, 'Tidak dapat terhubung ke server. Periksa koneksi Anda.')
   }
 
-  if (!res.ok) {
-    // Backend selalu mengirim JSON ApiError, tapi jaga-jaga bila body kosong
-    const data = await res.json().catch(() => null)
-    // Token salah/kedaluwarsa pada request ber-auth -> paksa login ulang
-    if (res.status === 401 && auth && token) useAuthStore.getState().logout()
-    throw new ApiError(
-      res.status,
-      data?.message ?? `Permintaan gagal (${res.status}).`,
-      data?.errors,
-    )
+  const text = await res.text()
+  let payload: unknown = null
+  if (text) {
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      payload = text
+    }
   }
 
-  // 204 / body kosong
-  if (res.status === 204) return undefined as T
-  const text = await res.text()
-  return (text ? JSON.parse(text) : undefined) as T
+  const envelope =
+    payload && typeof payload === 'object' && 'meta' in payload
+      ? (payload as ApiEnvelope<T>)
+      : null
+
+  if (!res.ok) {
+    const error = errorFromResponse(
+      res.status,
+      payload,
+      `Permintaan gagal (${res.status}).`,
+    )
+    if (res.status === 401 && auth && token) useAuthStore.getState().logout()
+    throw error
+  }
+
+  if (envelope) {
+    if (!envelope.meta?.success) {
+      throw errorFromResponse(res.status, payload, 'Permintaan gagal.')
+    }
+    return envelope.data as T
+  }
+
+  return payload as T
+}
+
+export async function apiUpload<T>(path: string, file: File): Promise<T> {
+  const body = new FormData()
+  body.append('file', file)
+  return api<T>(path, { method: 'POST', body, formData: true })
 }

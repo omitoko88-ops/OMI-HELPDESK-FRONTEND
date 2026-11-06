@@ -14,10 +14,8 @@ export function useRegisterHooks() {
     resolver: zodResolver(registerSchema),
     mode: 'onTouched',
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      countryCode: '62',
-      phoneNumber: '',
+      username: '',
+      email: '',
       password: '',
       confirmPassword: '',
       acceptTerms: false,

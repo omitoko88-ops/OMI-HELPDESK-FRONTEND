@@ -1,5 +1,5 @@
 // extensions/Badge.tsx
-import { Node, mergeAttributes, CommandProps } from "@tiptap/core";
+import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import BadgeComponent from "./BadgeComponent";
 

@@ -1,32 +1,50 @@
-import { avatarUrl } from '../../utils/avatars';
+import { useNavigate } from 'react-router'
+import { useAuthStore } from '@/stores/authStore'
+import { getJwtUser } from '@/lib/jwt'
+import { Icon } from '../ui/Icon'
 
-/**
- * Right side of the header: stacked collaborator avatars, a divider,
- * and the signed-in user's avatar + name/role.
- */
-export function UserMenu() {
+interface UserMenuProps {
+  memberCount: number
+  accessLabel: string
+}
+
+export function UserMenu({ memberCount, accessLabel }: UserMenuProps) {
+  const navigate = useNavigate()
+  const token = useAuthStore((state) => state.token)
+  const logout = useAuthStore((state) => state.logout)
+  const user = getJwtUser(token)
+  const initials = user.username.slice(0, 2).toUpperCase()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div className="flex items-center gap-3">
-      {/* Active workspace members (overlapping avatars + "+2" counter) */}
-      <div className="hidden sm:flex items-center -space-x-1.5" title="Workspace Members">
-        <img className="w-6 h-6 rounded-full border-2 border-white" src={avatarUrl('alex', 64)} alt="Alex" />
-        <img className="w-6 h-6 rounded-full border-2 border-white" src={avatarUrl('devin', 64)} alt="Devin" />
-        <span className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-mono text-slate-600 font-bold">
-          +2
-        </span>
+      <div className="hidden items-center gap-1.5 font-mono text-[10px] text-slate-500 sm:flex" title="Workspace members">
+        <Icon name="users" className="text-geek-cyan" />
+        <span className="font-bold text-slate-700">{memberCount}</span>
+        <span>members</span>
       </div>
-
-      {/* Vertical divider */}
       <span className="h-4 w-px bg-slate-200" />
-
-      {/* Current user */}
       <div className="flex items-center gap-2">
-        <img className="w-8 h-8 rounded-lg border border-slate-300" src={avatarUrl('neo', 80)} alt="User" />
-        <div className="hidden lg:block text-left font-mono">
-          <div className="text-xs font-bold text-slate-800 leading-tight">neo_dev</div>
-          <div className="text-[10px] text-geek-accent">● Editor</div>
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-slate-100 font-mono text-[10px] font-bold text-slate-700">
+          {initials}
+        </span>
+        <div className="hidden text-left font-mono lg:block">
+          <div className="text-xs font-bold leading-tight text-slate-800">{user.username}</div>
+          <div className="text-[10px] text-geek-accent">● {accessLabel}</div>
         </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          title="Log out"
+          className="ml-1 rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+        >
+          <Icon name="right-from-bracket" />
+        </button>
       </div>
     </div>
-  );
+  )
 }

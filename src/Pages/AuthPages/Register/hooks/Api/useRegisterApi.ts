@@ -1,37 +1,23 @@
 import { useAppMutation } from '@/lib/ReactQueryHelper'
-import { api } from '@/lib/axios'
-import type { User } from '@/interfaces/User'
-import type { RegisterResult } from '../../interface/RegisterApiResponse'
+import { api } from '@/lib/api/client'
 
 export interface RegisterPayload {
-  firstName: string
-  lastName: string
-  countryCode: string
-  phoneNumber: string
+  username: string
+  email: string
   password: string
+  confirmPassword: string
 }
 
-interface RegisterApiEnvelope {
-  data?: User
-  user?: User
+export interface RegisterResult {
+  message: string
 }
 
-const registerUser = async (
-  payload: RegisterPayload,
-): Promise<RegisterResult> => {
-  const response = await api.post<RegisterApiEnvelope | User>(
-    '/api/Auth/register',
-    payload,
-  )
-
-  const body = response.data
-  const user =
-    ('data' in body ? body.data : undefined) ??
-    ('user' in body ? body.user : undefined) ??
-    ('id' in body ? body : null)
-
-  return { user: user ?? null }
-}
+const registerUser = async (payload: RegisterPayload): Promise<RegisterResult> =>
+  api<RegisterResult>('/api/Auth/register', {
+    method: 'POST',
+    body: payload,
+    auth: false,
+  })
 
 export const useRegisterApi = () =>
   useAppMutation({

@@ -36,9 +36,9 @@ export const useDocUiStore = create<DocUiState>((set) => ({
 
 // Folder pohon yang terbuka diingat antar sesi
 interface TreeState {
-  expanded: Record<number, boolean>
-  setExpanded: (id: number, open: boolean) => void
-  expandMany: (ids: number[]) => void
+  expanded: Record<string, boolean>
+  setExpanded: (id: string, open: boolean) => void
+  expandMany: (ids: string[]) => void
 }
 
 export const useTreeStore = create<TreeState>()(

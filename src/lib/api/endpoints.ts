@@ -1,81 +1,161 @@
-import { api } from './client'
+import { api, apiUpload } from './client'
 import type {
   CreateDocumentInput,
+  CurrentUserResponse,
   DocumentDto,
   DocumentListItemDto,
   DocumentShareDto,
   DocumentTreeNode,
   LoginResponse,
   MembersResponse,
+  MoveDocumentInput,
   PublicDocumentDto,
   PublicShareResponse,
   UpdateDocumentInput,
+  UploadResponse,
   UpsertShareInput,
+  UserWorkspacesResponse,
   WorkspaceDto,
   WorkspaceRole,
 } from './types'
 
-// Semua URL di bawah mengikuti tabel "Daftar Endpoint" di ARCHITECTURE.md bagian 8.
-
 export const authApi = {
-  // ASUMSI: sesuaikan path/body dengan AuthController Anda
   login: (body: { username: string; password: string }) =>
-    api<LoginResponse>('/api/auth/login', { method: 'POST', body, auth: false }),
+    api<LoginResponse>('/api/Auth/login', { method: 'POST', body, auth: false }),
+  me: (signal?: AbortSignal) =>
+    api<CurrentUserResponse>('/api/Auth/me', { signal }),
 }
 
 export const workspaceApi = {
-  mine: (signal?: AbortSignal) => api<WorkspaceDto[]>('/api/workspace/me', { signal }),
-  get: (id: number, signal?: AbortSignal) => api<WorkspaceDto>(`/api/workspace/${id}`, { signal }),
-  create: (name: string) => api<WorkspaceDto>('/api/workspace', { method: 'POST', body: { name } }),
-  rename: (id: number, name: string) => api<WorkspaceDto>(`/api/workspace/${id}`, { method: 'PUT', body: { name } }),
-  remove: (id: number) => api<void>(`/api/workspace/${id}`, { method: 'DELETE' }),
+  mine: (signal?: AbortSignal) =>
+    api<UserWorkspacesResponse>('/api/Workspace/user/workspaces', { signal }),
+  get: (id: string, signal?: AbortSignal) =>
+    api<WorkspaceDetailResponse>(`/api/Workspace/${id}`, { signal }),
+  create: (name: string) =>
+    api<WorkspaceDto>('/api/Workspace', { method: 'POST', body: { name } }),
+  rename: (id: string, name: string) =>
+    api<{ message: string; result: WorkspaceDto }>(`/api/Workspace/${id}`, {
+      method: 'PUT',
+      body: { name },
+    }),
+  remove: (id: string) =>
+    api<{ message: string }>(`/api/Workspace/${id}`, { method: 'DELETE' }),
 }
 
 export const memberApi = {
-  list: (wid: number, signal?: AbortSignal) =>
-    api<MembersResponse>(`/api/workspaces/${wid}/members`, { signal }),
-  add: (wid: number, body: { email: string; role: WorkspaceRole }) =>
-    api<void>(`/api/workspaces/${wid}/members`, { method: 'POST', body }),
-  changeRole: (wid: number, memberId: number, role: WorkspaceRole) =>
-    api<void>(`/api/workspaces/${wid}/members/${memberId}/role`, { method: 'PUT', body: { role } }),
-  remove: (wid: number, memberId: number) =>
-    api<void>(`/api/workspaces/${wid}/members/${memberId}`, { method: 'DELETE' }),
-  leave: (wid: number) => api<void>(`/api/workspaces/${wid}/members/me`, { method: 'DELETE' }),
+  list: (workspaceId: string, signal?: AbortSignal) =>
+    api<MembersResponse>(`/api/workspaces/${workspaceId}/members`, { signal }),
+  add: (workspaceId: string, body: { email: string; role: WorkspaceRole }) =>
+    api<MembersResponse['members'][number]>(`/api/workspaces/${workspaceId}/members`, {
+      method: 'POST',
+      body,
+    }),
+  changeRole: (workspaceId: string, memberId: string, role: WorkspaceRole) =>
+    api<MembersResponse['members'][number]>(
+      `/api/workspaces/${workspaceId}/members/${memberId}/role`,
+      { method: 'PUT', body: { role } },
+    ),
+  remove: (workspaceId: string, memberId: string) =>
+    api<{ message: string }>(`/api/workspaces/${workspaceId}/members/${memberId}`, {
+      method: 'DELETE',
+    }),
+  leave: (workspaceId: string) =>
+    api<{ message: string }>(`/api/workspaces/${workspaceId}/members/me`, {
+      method: 'DELETE',
+    }),
 }
 
 export const documentApi = {
-  // Daftar tanpa isi; mendukung search dan parentId
-  list: (wid: number, q?: { search?: string; parentId?: number }, signal?: AbortSignal) =>
-    api<DocumentListItemDto[]>(`/api/workspaces/${wid}/documents`, { query: q, signal }),
-  tree: (wid: number, signal?: AbortSignal) =>
-    api<DocumentTreeNode[]>(`/api/workspaces/${wid}/documents/tree`, { signal }),
-  get: (id: number, signal?: AbortSignal) => api<DocumentDto>(`/api/documents/${id}`, { signal }),
-  create: (wid: number, body: CreateDocumentInput) =>
-    api<DocumentDto>(`/api/workspaces/${wid}/documents`, { method: 'POST', body }),
-  update: (id: number, body: UpdateDocumentInput) =>
-    api<DocumentDto>(`/api/documents/${id}`, { method: 'PUT', body }),
-  // parentId null = jadikan halaman utama. Backend menolak siklus (409/400)
-  move: (id: number, parentId: number | null) =>
-    api<void>(`/api/documents/${id}/move`, { method: 'PATCH', body: { parentId } }),
-  remove: (id: number) => api<void>(`/api/documents/${id}`, { method: 'DELETE' }),
+  list: (
+    workspaceId: string,
+    query?: { search?: string; parentId?: string },
+    signal?: AbortSignal,
+  ) =>
+    api<DocumentListItemDto[]>(
+      `/api/workspaces/${workspaceId}/search-documents`,
+      { query, signal },
+    ),
+  tree: (workspaceId: string, signal?: AbortSignal) =>
+    api<DocumentTreeNode[]>(`/api/workspaces/${workspaceId}/documents/tree`, {
+      signal,
+    }),
+  get: (documentId: string, signal?: AbortSignal) =>
+    api<DocumentDto>(`/api/documents/${documentId}`, { signal }),
+  create: (workspaceId: string, body: CreateDocumentInput) =>
+    api<DocumentDto>(`/api/workspaces/${workspaceId}/documents`, {
+      method: 'POST',
+      body,
+    }),
+  update: (documentId: string, body: UpdateDocumentInput) =>
+    api<DocumentDto>(`/api/documents/${documentId}`, { method: 'PUT', body }),
+  move: (documentId: string, body: MoveDocumentInput) =>
+    api<DocumentListItemDto>(`/api/documents/${documentId}/move`, {
+      method: 'PATCH',
+      body,
+    }),
+  remove: (documentId: string) =>
+    api<{ message: string; deletedCount: number }>(`/api/documents/${documentId}`, {
+      method: 'DELETE',
+    }),
 }
 
 export const shareApi = {
-  get: (docId: number, signal?: AbortSignal) =>
-    api<DocumentShareDto>(`/api/documents/${docId}/share`, { signal }),
-  upsert: (docId: number, body: UpsertShareInput) =>
-    api<DocumentShareDto>(`/api/documents/${docId}/share`, { method: 'PUT', body }),
-  regenerate: (docId: number) =>
-    api<DocumentShareDto>(`/api/documents/${docId}/share/regenerate`, { method: 'POST' }),
-  remove: (docId: number) => api<void>(`/api/documents/${docId}/share`, { method: 'DELETE' }),
+  get: (documentId: string, signal?: AbortSignal) =>
+    api<DocumentShareDto>(`/api/documents/${documentId}/share`, { signal }),
+  upsert: (documentId: string, body: UpsertShareInput) =>
+    api<DocumentShareDto>(`/api/documents/${documentId}/share`, {
+      method: 'PUT',
+      body,
+    }),
+  regenerate: (documentId: string) =>
+    api<DocumentShareDto>(`/api/documents/${documentId}/share/regenerate`, {
+      method: 'POST',
+    }),
+  remove: (documentId: string) =>
+    api<{ message: string }>(`/api/documents/${documentId}/share`, {
+      method: 'DELETE',
+    }),
 }
 
-// Endpoint publik: GET tanpa Authorization; PUT wajib JWT (link Editor)
 export const publicApi = {
   root: (token: string, signal?: AbortSignal) =>
-    api<PublicShareResponse>(`/api/public/documents/${token}`, { auth: false, signal }),
-  page: (token: string, id: number, signal?: AbortSignal) =>
-    api<PublicDocumentDto>(`/api/public/documents/${token}/pages/${id}`, { auth: false, signal }),
-  updatePage: (token: string, id: number, body: UpdateDocumentInput) =>
-    api<PublicDocumentDto>(`/api/public/documents/${token}/pages/${id}`, { method: 'PUT', body }),
+    api<PublicShareResponse>(`/api/public/documents/${token}`, {
+      auth: false,
+      signal,
+    }),
+  page: (token: string, documentId: string, signal?: AbortSignal) =>
+    api<PublicDocumentDto>(
+      `/api/public/documents/${token}/pages/${documentId}`,
+      { auth: false, signal },
+    ),
+  updatePage: (
+    token: string,
+    documentId: string,
+    body: UpdateDocumentInput,
+  ) =>
+    api<PublicDocumentDto>(
+      `/api/public/documents/${token}/pages/${documentId}`,
+      { method: 'PUT', body },
+    ),
+}
+
+export const uploadApi = {
+  image: (file: File) => apiUpload<UploadResponse>('/api/v1/upload/image', file),
+  pdf: (file: File) => apiUpload<UploadResponse>('/api/v1/upload/pdf', file),
+}
+
+// Detail workspace dipakai untuk daftar member/dokumen terbaru di overview.
+export interface WorkspaceDetailResponse extends WorkspaceDto {
+  members: Array<{
+    id: string
+    userId: string
+    role: WorkspaceRole
+    joinedAt: string
+  }>
+  documents: Array<{
+    id: string
+    parentId: string | null
+    title: string
+    content: string | null
+  }>
 }

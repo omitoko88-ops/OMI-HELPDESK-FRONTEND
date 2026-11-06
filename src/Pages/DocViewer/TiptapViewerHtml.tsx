@@ -1,55 +1,40 @@
 import { useEffect } from 'react'
-import prettier from 'prettier/standalone'
-import parserHtml from 'prettier/plugins/html'
-import { useEditor, EditorContent } from '@tiptap/react'
-import { ToolbarFloating } from '../Toolbar/ToolbarFloating'
+import { EditorContent, useEditor } from '@tiptap/react'
 import { createEditorExtensions } from '../DocEditor/Extentions/extensions'
 import { docTableClasses } from '../DocEditor/CustomComponents/Table/tableStyles'
 import { docStepsClasses } from '../DocEditor/CustomComponents/Steps/stepsStyles'
 
-export function TiptapViewer({ html }: { html: string }) {
+interface TiptapViewerProps {
+  html: string
+  editable?: boolean
+  showToolbar?: boolean
+}
+
+export function TiptapViewer({ html, editable = false, showToolbar = false }: TiptapViewerProps) {
   const editor = useEditor({
     extensions: createEditorExtensions(),
-    content: 'initialContent',
-    editable: true,
-
-    onUpdate: async ({ editor }) => {
-      const rawHtml = editor.getHTML()
-
-      try {
-        // format HTML biar rapi
-        const prettyHtml = await prettier.format(rawHtml, {
-          parser: 'html',
-          plugins: [parserHtml],
-          tabWidth: 2,
-          useTabs: false,
-          printWidth: 80,
-          htmlWhitespaceSensitivity: 'ignore',
-          bracketSameLine: false,
-          singleAttributePerLine: true,
-        })
-
-        // onChangeHtml?.(prettyHtml)
-      } catch (e) {
-        console.error('Prettier gagal format:', e)
-      }
-    },
+    content: html || '',
+    editable,
+    immediatelyRender: false,
   })
 
-  if (!editor) {
-    return null
-  }
-
-  // update content kalau prop html berubah
   useEffect(() => {
-    if (editor && html) {
-      editor.commands.setContent(html)
-    }
+    if (editor) editor.commands.setContent(html || '', { emitUpdate: false })
   }, [editor, html])
 
+  useEffect(() => {
+    if (editor) editor.setEditable(editable)
+  }, [editor, editable])
+
+  if (!editor) return null
+
   return (
-    <div>
-      <ToolbarFloating editor={editor} />
+    <div className="min-w-0">
+      {showToolbar && editable && (
+        <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-500">
+          Toolbar editor tersedia di halaman Edit.
+        </div>
+      )}
       <EditorContent
         editor={editor}
         className={`prose dark:prose-invert min-w-full ${docTableClasses} ${docStepsClasses}`}

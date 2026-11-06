@@ -1,38 +1,55 @@
-import { CHILD_PAGES, TOKEN_RESPONSE } from '../../data/activeDocument';
-import { ChildPageGrid } from './ChildPageGrid';
-import { CodeBlock } from './CodeBlock';
+import { Link } from 'react-router'
+import { TiptapViewer } from '@/Pages/DocViewer/TiptapViewerHtml'
+import type { DocumentTreeNode } from '@/lib/api/types'
+import { Icon } from '../ui/Icon'
 
-/**
- * White "rendered markdown" card.
- * In a real app this would be produced by a markdown renderer from the page's source.
- */
-export function DocumentContent() {
+interface DocumentContentProps {
+  content: string | null
+  children?: DocumentTreeNode[]
+  canWrite?: boolean
+}
+
+export function DocumentContent({ content, children = [], canWrite = false }: DocumentContentProps) {
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4 font-sans leading-relaxed text-slate-700">
-      {/* Section 1 */}
-      <h2 className="text-lg font-bold font-mono text-slate-900 border-b border-slate-100 pb-2">
-        1. Protocol Handshake
-      </h2>
-      <p className="text-sm">
-        All authentication tokens emitted within the{' '}
-        <code className="bg-slate-100 px-1.5 py-0.5 rounded text-geek-secondary font-mono text-xs">
-          Quantum Lab
-        </code>{' '}
-        workspace utilize RS256 asymmetrical cryptographic keys. Public keys are rotated every 24 hours at the
-        midnight epoch.
-      </p>
+    <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 font-sans leading-relaxed text-slate-700 shadow-sm">
+      {content ? (
+        <TiptapViewer html={content} editable={false} />
+      ) : (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+          <Icon name="file-lines" className="mb-2 text-2xl text-slate-300" />
+          <p className="text-sm font-semibold text-slate-600">Dokumen ini belum memiliki isi.</p>
+          <p className="mt-1 text-xs text-slate-400">
+            {canWrite
+              ? 'Buka editor untuk mulai menulis dokumentasi.'
+              : 'Hubungi editor workspace jika halaman ini perlu diisi.'}
+          </p>
+        </div>
+      )}
 
-      <CodeBlock request="POST /api/v2/auth/token" status="HTTP/1.1 200 OK" entries={TOKEN_RESPONSE} />
-
-      {/* Section 2 */}
-      <h2 className="text-lg font-bold font-mono text-slate-900 border-b border-slate-100 pb-2 pt-2">
-        2. Sub-Pages / Child Documentation Pages
-      </h2>
-      <p className="text-sm text-slate-600">
-        This parent document organizes {CHILD_PAGES.length} nested child documents:
-      </p>
-
-      <ChildPageGrid pages={CHILD_PAGES} />
+      {children.length > 0 && (
+        <div className="border-t border-slate-100 pt-5">
+          <h2 className="mb-3 font-mono text-sm font-bold text-slate-900">
+            Sub-pages ({children.length})
+          </h2>
+          <div className="grid grid-cols-1 gap-3 font-mono text-xs sm:grid-cols-2">
+            {children.map((child) => (
+              <Link
+                key={child.id}
+                to={`/docs/${child.id}`}
+                className="rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all hover:border-geek-secondary hover:bg-white"
+              >
+                <div className="flex items-center justify-between font-bold text-slate-800">
+                  <span className="truncate">{child.title}</span>
+                  <Icon name="arrow-right" className="text-slate-400" />
+                </div>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {child.children.length} nested page{child.children.length === 1 ? '' : 's'}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }

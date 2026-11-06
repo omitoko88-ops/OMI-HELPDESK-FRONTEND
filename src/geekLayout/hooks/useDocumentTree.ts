@@ -1,44 +1,78 @@
-import { useState } from 'react';
-import type { DocNode } from '../types';
+import { useMemo } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { documentApi } from '@/lib/api/endpoints'
+import type { DocumentTreeNode } from '@/lib/api/types'
+import { useTreeStore } from '@/stores/docUiStore'
+import type { DocNode } from '../types'
 
-/** Small helper that generates a unique-enough id for client-side demo nodes. */
-const newId = (prefix: string): string => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+const toDocNode = (node: DocumentTreeNode, expanded: Record<string, boolean>): DocNode => ({
+  id: node.id,
+  parentId: node.parentId,
+  title: node.title,
+  icon: node.children.length > 0 ? 'book' : 'file-code',
+  iconClass: node.children.length > 0 ? 'text-geek-secondary' : 'text-slate-400',
+  expanded: node.children.length > 0 ? (expanded[node.id] ?? true) : undefined,
+  children:
+    node.children.length > 0
+      ? node.children.map((child) => toDocNode(child, expanded))
+      : undefined,
+})
 
-/**
- * Holds the document tree state and the actions that change it.
- * React re-renders from this state, replacing the original document.createElement /
- * classList.toggle code.
- */
-export function useDocumentTree(initial: DocNode[]) {
-  const [docs, setDocs] = useState<DocNode[]>(initial);
+/** Pohon dokumen server + aksi CRUD yang langsung menyegarkan cache. */
+export function useDocumentTree(workspaceId: string | undefined) {
+  const queryClient = useQueryClient()
+  const expanded = useTreeStore((state) => state.expanded)
+  const setExpanded = useTreeStore((state) => state.setExpanded)
 
-  /** Expand / collapse a parent's child list. */
-  const toggleExpanded = (docId: string) => {
-    setDocs((prev) => prev.map((doc) => (doc.id === docId ? { ...doc, expanded: !doc.expanded } : doc)));
-  };
+  const query = useQuery({
+    queryKey: ['documents', workspaceId, 'tree'],
+    queryFn: ({ signal }) => documentApi.tree(workspaceId!, signal),
+    enabled: Boolean(workspaceId),
+  })
 
-  /** Ask for a title, then append a child page under `parentId` and expand it. */
-  const addChild = (parentId: string) => {
-    const title = window.prompt('Enter child page title (e.g. sub-topic.md):', 'new-sub-page.md');
-    if (!title) return;
+  const docs = useMemo(
+    () => (query.data ?? []).map((node) => toDocNode(node, expanded)),
+    [expanded, query.data],
+  )
 
-    const child: DocNode = { id: newId('child'), title, icon: 'file', iconClass: 'text-slate-400' };
+  const invalidate = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['documents', workspaceId] })
+    await queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] })
+  }
 
-    setDocs((prev) =>
-      prev.map((doc) =>
-        doc.id === parentId ? { ...doc, expanded: true, children: [...(doc.children ?? []), child] } : doc,
-      ),
-    );
-  };
+  const createMutation = useMutation({
+    mutationFn: (input: { title: string; parentId?: string | null }) =>
+      documentApi.create(workspaceId!, input),
+    onSuccess: async (document) => {
+      if (document.parentId) setExpanded(document.parentId, true)
+      await invalidate()
+    },
+  })
 
-  /** Ask for a title, then append a new root-level document. */
-  const addRoot = () => {
-    const title = window.prompt('Enter new root document title:', 'new-document.md');
-    if (!title) return;
+  const moveMutation = useMutation({
+    mutationFn: (input: { documentId: string; parentId: string | null }) =>
+      documentApi.move(input.documentId, { parentId: input.parentId }),
+    onSuccess: invalidate,
+  })
 
-    const root: DocNode = { id: newId('doc'), title, icon: 'file-lines', iconClass: 'text-geek-secondary' };
-    setDocs((prev) => [...prev, root]);
-  };
+  const deleteMutation = useMutation({
+    mutationFn: (documentId: string) => documentApi.remove(documentId),
+    onSuccess: invalidate,
+  })
 
-  return { docs, toggleExpanded, addChild, addRoot };
+  return {
+    ...query,
+    docs,
+    toggleExpanded: (docId: string) => setExpanded(docId, !(expanded[docId] ?? true)),
+    addChild: async (parentId: string, title: string) => {
+      setExpanded(parentId, true)
+      return createMutation.mutateAsync({ title, parentId })
+    },
+    addRoot: (title: string) => createMutation.mutateAsync({ title, parentId: null }),
+    moveDocument: (documentId: string, parentId: string | null) =>
+      moveMutation.mutateAsync({ documentId, parentId }),
+    deleteDocument: (documentId: string) => deleteMutation.mutateAsync(documentId),
+    isMutating:
+      createMutation.isPending || moveMutation.isPending || deleteMutation.isPending,
+  }
 }

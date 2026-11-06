@@ -1,35 +1,99 @@
-import { useState } from 'react';
-import type { Workspace } from '../types';
+import { useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { workspaceApi } from '@/lib/api/endpoints'
+import type { WorkspaceDto } from '@/lib/api/types'
+import type { Workspace } from '../types'
 
-/**
- * Owns the workspace list + which one is selected.
- * Replaces the original `switchWorkspace()` DOM manipulation.
- */
-export function useWorkspaces(initial: Workspace[]) {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(initial);
-  const [activeId, setActiveId] = useState<string>(initial[0].id);
+const ACTIVE_WORKSPACE_KEY = 'omi-active-workspace'
 
-  // Falls back to the first workspace if the id is ever missing.
-  const activeWorkspace = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
+const toWorkspace = (dto: WorkspaceDto, relation: 'owner' | 'member'): Workspace => ({
+  id: dto.id,
+  name: dto.name,
+  label: dto.name,
+  icon: relation === 'owner' ? 'cubes' : 'users',
+  iconClass: relation === 'owner' ? 'text-geek-secondary' : 'text-geek-cyan',
+  badge: relation === 'owner' ? 'Owner' : 'Member',
+  badgeClass:
+    relation === 'owner'
+      ? 'bg-indigo-100 text-indigo-700'
+      : 'bg-sky-100 text-sky-700',
+  relation,
+})
 
-  const createWorkspace = () => {
-    // The original HTML called an undefined `openWorkspaceModal()`.
-    // A prompt keeps the demo functional; replace it with a real modal later.
-    const name = window.prompt('Enter new workspace name:', 'New Workspace')?.trim();
-    if (!name) return;
+/** Workspace list + active selection, seluruhnya bersumber dari API. */
+export function useWorkspaces() {
+  const queryClient = useQueryClient()
+  const query = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: ({ signal }) => workspaceApi.mine(signal),
+  })
 
-    const created: Workspace = {
-      id: `ws-${Date.now()}`,
-      name,
-      label: `${name} (Team)`,
-      icon: 'cubes',
-      iconClass: 'text-geek-secondary',
-      badge: '1 member',
-      badgeClass: 'bg-slate-100 text-slate-600',
-    };
-    setWorkspaces((prev) => [...prev, created]);
-    setActiveId(created.id);
-  };
+  const workspaces = useMemo(() => {
+    const owned = (query.data?.ownedWorkspaces ?? []).map((w) => toWorkspace(w, 'owner'))
+    const joined = (query.data?.joinedWorkspaces ?? []).map((w) => toWorkspace(w, 'member'))
+    return [...owned, ...joined]
+  }, [query.data])
 
-  return { workspaces, activeWorkspace, selectWorkspace: setActiveId, createWorkspace };
+  const [activeId, setActiveId] = useState<string>(() => {
+    if (typeof window === 'undefined') return ''
+    return localStorage.getItem(ACTIVE_WORKSPACE_KEY) ?? ''
+  })
+
+  const activeWorkspace =
+    workspaces.find((workspace) => workspace.id === activeId) ?? workspaces[0] ?? null
+
+  useEffect(() => {
+    if (activeWorkspace && activeWorkspace.id !== activeId) {
+      setActiveId(activeWorkspace.id)
+    }
+    if (activeWorkspace) {
+      localStorage.setItem(ACTIVE_WORKSPACE_KEY, activeWorkspace.id)
+    }
+  }, [activeId, activeWorkspace])
+
+  const selectWorkspace = (id: string) => {
+    setActiveId(id)
+    localStorage.setItem(ACTIVE_WORKSPACE_KEY, id)
+  }
+
+  const invalidateWorkspaces = () =>
+    queryClient.invalidateQueries({ queryKey: ['workspaces'] })
+
+  const createMutation = useMutation({
+    mutationFn: (name: string) => workspaceApi.create(name),
+    onSuccess: async (created) => {
+      selectWorkspace(created.id)
+      await invalidateWorkspaces()
+    },
+  })
+
+  const renameMutation = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      workspaceApi.rename(id, name),
+    onSuccess: invalidateWorkspaces,
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => workspaceApi.remove(id),
+    onSuccess: async (_data, id) => {
+      if (activeId === id) {
+        const remaining = workspaces.filter((workspace) => workspace.id !== id)
+        if (remaining[0]) selectWorkspace(remaining[0].id)
+        else setActiveId('')
+      }
+      await invalidateWorkspaces()
+    },
+  })
+
+  return {
+    ...query,
+    workspaces,
+    activeWorkspace,
+    selectWorkspace,
+    createWorkspace: createMutation.mutateAsync,
+    renameWorkspace: renameMutation.mutateAsync,
+    deleteWorkspace: removeMutation.mutateAsync,
+    isMutating:
+      createMutation.isPending || renameMutation.isPending || removeMutation.isPending,
+  }
 }

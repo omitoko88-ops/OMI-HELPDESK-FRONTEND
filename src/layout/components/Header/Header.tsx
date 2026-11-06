@@ -1,20 +1,19 @@
 // src/components/layout/Header.tsx
 import { ErrorAlert } from "@/components/common/CustomErrorAlert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVersion } from "@/hooks/api/useVersion";
 import { Version } from "@/interfaces/Version";
 import { ApiError } from "@/lib/ApiError";
 import { useActiveVersion } from "@/stores/versionStore";
-import { ArrowDown, Check, ChevronDown, Menu, X } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { useEffect } from "react";
 
 export default function Header() {
@@ -65,20 +64,7 @@ export default function Header() {
   );
 }
 
-const SidebarToggle = () => {
-  const { openMobile, setOpenMobile } = useSidebar();
 
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setOpenMobile(!openMobile)}
-      className="md:hidden"
-    >
-      {openMobile ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-    </Button>
-  );
-};
 
 function DropdownVersion({ listVersion }: { listVersion: Version[] }) {
   const { setVersion, version } = useActiveVersion();

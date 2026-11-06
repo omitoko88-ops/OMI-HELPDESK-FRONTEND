@@ -1,4 +1,4 @@
-import type { LogEntry, LogTone } from '../Pages/AuthPages/types'
+import type { LogEntry, LogTone } from '../Pages/AuthPages/Login/types'
 
 export const TERMINAL_PROMPT = 'system@devdocs:~$'
 

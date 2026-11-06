@@ -32,7 +32,7 @@ export function useLogin({
           onError: (err) => {
             showMessage(`Access Denied: ${err.message}`, 'error')
             appendLog(
-              `[ERROR] Authentication failed for ${username}: ${err.message} (code ${err.code})`,
+              `[ERROR] Authentication failed for ${username}: ${err.message} (code ${err.status})`,
               'warning',
             )
           },
@@ -48,7 +48,7 @@ export function useLogin({
 
             // Token disimpan langsung (tidak menunggu delay) agar
             // halaman tujuan sudah punya sesi saat dibuka
-            setSession(res.accessToken, res.user?.id ?? null, rememberMe)
+            setSession(res.accessToken, res.userId, rememberMe)
             appendLog('[REDIRECT] Restoring requested page...', 'accent')
           },
         },
