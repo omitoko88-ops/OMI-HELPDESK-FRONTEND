@@ -1,16 +1,14 @@
 import { useState } from 'react'
-import { Link, useOutletContext, useParams } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
-import { documentApi } from '@/lib/api/endpoints'
-import type { LayoutOutletContext } from '../GeekLayout'
+import { Link, useParams } from 'react-router'
+import { useWorkspaceContext } from '../context/WorkspaceContext'
+import { useWorkspaceDocuments } from '../hooks/useDocumentQueries'
 import type { DocumentTreeNode } from '@/lib/api/types'
 import { MainContent } from '../components/document/MainContent'
 import { Icon } from '../components/ui/Icon'
 
 export function DocumentPage() {
   const { documentId } = useParams<{ documentId: string }>()
-  const { activeWorkspace, docs, access, openShare } =
-    useOutletContext<LayoutOutletContext>()
+  const { activeWorkspace, docs, accessLevel } = useWorkspaceContext()
   const firstDocId = docs[0]?.children?.[0]?.id ?? docs[0]?.id
   const selectedId = documentId ?? firstDocId
 
@@ -19,14 +17,13 @@ export function DocumentPage() {
       documentId={selectedId}
       workspace={activeWorkspace}
       tree={toTree(docs)}
-      access={access}
-      onShare={openShare}
+      access={accessLevel}
     />
   )
 }
 
 // DocNode -> DocumentTreeNode for components that need the API tree shape.
-function toTree(nodes: LayoutOutletContext['docs']): DocumentTreeNode[] {
+function toTree(nodes: ReturnType<typeof useWorkspaceContext>['docs']): DocumentTreeNode[] {
   return nodes.map((node) => ({
     id: node.id,
     parentId: node.parentId,
@@ -36,17 +33,14 @@ function toTree(nodes: LayoutOutletContext['docs']): DocumentTreeNode[] {
 }
 
 export function DocumentsIndexPage() {
-  const { activeWorkspace, docs, access, members, openShare } =
-    useOutletContext<LayoutOutletContext>()
+  const { activeWorkspace, docs, accessLevel, members, openShare, canWrite } =
+    useWorkspaceContext()
   const [search, setSearch] = useState('')
-  const list = useQuery({
-    queryKey: ['documents', activeWorkspace?.id, 'search', search],
-    queryFn: ({ signal }) =>
-      documentApi.list(activeWorkspace!.id, search ? { search } : undefined, signal),
-    enabled: Boolean(activeWorkspace),
-  })
-  const canWrite = access === 'owner' || access === 'editor'
-
+  const list = useWorkspaceDocuments(
+    activeWorkspace?.id,
+    search ? { search } : undefined,
+    Boolean(activeWorkspace),
+  )
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5 p-4 sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -58,7 +52,7 @@ export function DocumentsIndexPage() {
             {activeWorkspace?.name ?? 'Workspace'}
           </h1>
           <p className="mt-1 text-xs text-slate-500">
-            {docs.length} root pages · {members.length} collaborators · akses {access}
+            {docs.length} root pages · {members.length} collaborators · akses {accessLevel}
           </p>
         </div>
         <div className="relative w-full sm:w-72">

@@ -1,62 +1,62 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import type { ShareRole } from '@/lib/api/types'
-import { useDocumentShare, useShareMutations } from '../../hooks/useDocumentQueries'
+import { useWorkspaceContext } from '../../context/WorkspaceContext'
+import { useShareForm } from '../../hooks/useShareForm'
 import { Icon } from '../ui/Icon'
 
 interface LinkAccessPanelProps {
   documentId: string
-  canWrite: boolean
 }
 
-export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) {
-  const shareQuery = useDocumentShare(documentId, canWrite)
-  const { save, regenerate, remove, shareUrl } = useShareMutations(documentId)
-  const [role, setRole] = useState<ShareRole>('Viewer')
-  const [expiresAt, setExpiresAt] = useState('')
+export function LinkAccessPanel({ documentId }: LinkAccessPanelProps) {
+  const { canWrite, share, shareQuery } = useWorkspaceContext()
   const [copied, setCopied] = useState(false)
 
-  useEffect(() => {
-    if (!shareQuery.data) return
-    setRole(shareQuery.data.role)
-    setExpiresAt(shareQuery.data.expiresAt?.slice(0, 16) ?? '')
-  }, [shareQuery.data])
-
-  const isEnabled = shareQuery.data?.isEnabled ?? false
-  const token = shareQuery.data?.token ?? null
-  const url = shareUrl(token)
-  const isBusy = save.isPending || regenerate.isPending || remove.isPending
-
-  const upsert = async (next: {
-    isEnabled?: boolean
-    role?: ShareRole
-    expiresAt?: string | null
-  }) => {
-    try {
-      await save.mutateAsync({
-        isEnabled: next.isEnabled ?? isEnabled,
-        role: next.role ?? role,
-        expiresAt:
-          next.expiresAt !== undefined
-            ? next.expiresAt
-            : expiresAt
-              ? new Date(expiresAt).toISOString()
-              : null,
+  const form = useShareForm({
+    share: shareQuery.data,
+    isPending: share.save.isPending,
+    onSubmit: async ({ isEnabled, role, expiresAt }) => {
+      await share.save.mutateAsync({
+        isEnabled,
+        role,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
       })
-      toast.success('Pengaturan link disimpan.')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Gagal menyimpan link.')
-    }
-  }
+    },
+  })
+
+  const isEnabled = form.form.watch('isEnabled')
+  const token = shareQuery.data?.token ?? null
+  const url = share.shareUrl(token)
+  const isBusy = share.save.isPending || share.regenerate.isPending || share.remove.isPending
 
   const copy = async () => {
-    if (!url) return
+    if (!url || !isEnabled) return
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
       window.alert(`Salin URL berikut:\n${url}`)
+    }
+  }
+
+  const regenerate = async () => {
+    if (!window.confirm('Token lama akan langsung tidak berlaku. Lanjutkan?')) return
+    try {
+      await share.regenerate.mutateAsync()
+      toast.success('Token berhasil dibuat ulang.')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal membuat ulang token.')
+    }
+  }
+
+  const remove = async () => {
+    if (!window.confirm('Hapus pengaturan link berbagi?')) return
+    try {
+      await share.remove.mutateAsync()
+      toast.success('Link berbagi dihapus.')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal menghapus link.')
     }
   }
 
@@ -83,7 +83,13 @@ export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) 
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        void form.submit()
+      }}
+      className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5"
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Icon name="link" className="text-sm text-geek-cyan" />
@@ -95,30 +101,41 @@ export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) 
           </div>
         </div>
 
-        <label className="flex cursor-pointer items-center gap-2 text-[11px] font-bold text-slate-700">
-          <input
-            type="checkbox"
-            checked={isEnabled}
-            disabled={isBusy}
-            onChange={(event) => void upsert({ isEnabled: event.target.checked })}
-            className="h-3.5 w-3.5 accent-emerald-600"
-          />
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isEnabled}
+          disabled={isBusy}
+          onClick={() => {
+            form.form.setValue('isEnabled', !isEnabled, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }}
+          className="flex items-center gap-2 text-[11px] font-bold text-slate-700 disabled:opacity-50"
+        >
+          <span
+            className={`relative h-4 w-7 rounded-full transition-colors ${
+              isEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${
+                isEnabled ? 'left-3.5' : 'left-0.5'
+              }`}
+            />
+          </span>
           {isEnabled ? 'Active' : 'Disabled'}
-        </label>
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <label className="space-y-1">
           <span className="block text-[10px] font-bold uppercase text-slate-500">Role</span>
           <select
-            value={role}
             disabled={isBusy}
-            onChange={(event) => {
-              const nextRole = event.target.value as ShareRole
-              setRole(nextRole)
-              void upsert({ role: nextRole })
-            }}
-            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-geek-cyan"
+            {...form.form.register('role')}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-geek-cyan disabled:opacity-60"
           >
             <option value="Viewer">Viewer (Read Only)</option>
             <option value="Editor">Editor (Can Modify)</option>
@@ -129,20 +146,18 @@ export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) 
           <span className="block text-[10px] font-bold uppercase text-slate-500">Expires</span>
           <input
             type="datetime-local"
-            value={expiresAt}
             disabled={isBusy}
-            onChange={(event) => {
-              setExpiresAt(event.target.value)
-              void upsert({
-                expiresAt: event.target.value
-                  ? new Date(event.target.value).toISOString()
-                  : null,
-              })
-            }}
-            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-geek-cyan"
+            {...form.form.register('expiresAt')}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-geek-cyan disabled:opacity-60"
           />
         </label>
       </div>
+
+      {form.form.formState.errors.expiresAt && (
+        <p className="text-[10px] font-bold text-rose-600">
+          {form.form.formState.errors.expiresAt.message}
+        </p>
+      )}
 
       <div className="flex items-center gap-2">
         <input
@@ -162,19 +177,22 @@ export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) 
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500">
-        <span className="max-w-[60%] truncate font-mono">
+        <span className="max-w-[55%] truncate font-mono">
           Token: {token ?? 'belum dibuat'}
         </span>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={
+              isBusy || !form.form.formState.isDirty
+            }
+            className="font-bold text-geek-secondary hover:underline disabled:opacity-40"
+          >
+            {share.save.isPending ? 'Saving...' : 'Save access'}
+          </button>
           <button
             type="button"
-            onClick={() => {
-              if (!window.confirm('Token lama akan langsung tidak berlaku. Lanjutkan?')) return
-              void regenerate
-                .mutateAsync()
-                .then(() => toast.success('Token berhasil dibuat ulang.'))
-                .catch((error: Error) => toast.error(error.message))
-            }}
+            onClick={() => void regenerate()}
             disabled={!token || isBusy}
             className="font-bold text-geek-secondary hover:underline disabled:opacity-40"
           >
@@ -182,13 +200,7 @@ export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) 
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (!window.confirm('Hapus pengaturan link berbagi?')) return
-              void remove
-                .mutateAsync()
-                .then(() => toast.success('Link berbagi dihapus.'))
-                .catch((error: Error) => toast.error(error.message))
-            }}
+            onClick={() => void remove()}
             disabled={!token || isBusy}
             className="font-bold text-rose-600 hover:underline disabled:opacity-40"
           >
@@ -196,6 +208,10 @@ export function LinkAccessPanel({ documentId, canWrite }: LinkAccessPanelProps) 
           </button>
         </div>
       </div>
-    </div>
+
+      <p className="font-mono text-[9px] text-slate-400">
+        Document: {documentId}
+      </p>
+    </form>
   )
 }

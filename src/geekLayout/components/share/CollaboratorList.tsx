@@ -1,35 +1,39 @@
-import { useState } from 'react'
 import { toast } from 'sonner'
 import type { WorkspaceRole } from '@/lib/api/types'
-import { useMemberMutations } from '../../hooks/useWorkspaceMembers'
-import { useWorkspaceAccess } from '../../hooks/useWorkspaceAccess'
+import { useWorkspaceContext } from '../../context/WorkspaceContext'
+import { useMemberForm } from '../../hooks/useMemberForm'
 import { Icon } from '../ui/Icon'
 
 interface CollaboratorListProps {
-  workspaceId: string
+  readOnly?: boolean
+  memberCount?: number
 }
 
-export function CollaboratorList({ workspaceId }: CollaboratorListProps) {
-  const { owner, members, canManageMembers } = useWorkspaceAccess(workspaceId)
-  const mutations = useMemberMutations(workspaceId)
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState<WorkspaceRole>('Editor')
+export function CollaboratorList({
+  readOnly = false,
+  memberCount,
+}: CollaboratorListProps) {
+  const {
+    owner,
+    members,
+    canManageMembers,
+    memberMutations,
+  } = useWorkspaceContext()
+  const canManage = canManageMembers && !readOnly
 
-  const add = async () => {
-    const value = email.trim()
-    if (!value) return
-    try {
-      await mutations.add.mutateAsync({ email: value, role })
-      setEmail('')
+  const form = useMemberForm({
+    isPending: memberMutations.add.isPending,
+    onSubmit: async ({ email, role }) => {
+      await memberMutations.add.mutateAsync({ email, role })
       toast.success('Anggota berhasil ditambahkan.')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Gagal menambah anggota.')
-    }
-  }
+    },
+  })
+  const role = form.form.watch('role')
 
   const changeRole = async (memberId: string, nextRole: WorkspaceRole) => {
     try {
-      await mutations.changeRole.mutateAsync({ memberId, role: nextRole })
+      await memberMutations.changeRole.mutateAsync({ memberId, role: nextRole })
+      toast.success('Role anggota diperbarui.')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Gagal mengubah role.')
     }
@@ -38,10 +42,12 @@ export function CollaboratorList({ workspaceId }: CollaboratorListProps) {
   const remove = async (memberId: string, username: string) => {
     if (!window.confirm(`Keluarkan ${username} dari workspace?`)) return
     try {
-      await mutations.remove.mutateAsync(memberId)
-      toast.success('Anggota dikeluarkan.')
+      await memberMutations.remove.mutateAsync(memberId)
+      toast.success('Anggota dikeluarkan dari workspace.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Gagal mengeluarkan anggota.')
+      toast.error(
+        error instanceof Error ? error.message : 'Gagal mengeluarkan anggota.',
+      )
     }
   }
 
@@ -49,7 +55,9 @@ export function CollaboratorList({ workspaceId }: CollaboratorListProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-700">
         <span>Workspace Collaborators</span>
-        <span className="text-geek-accent">{Math.max(0, members.length - 1)} members</span>
+        <span className="text-geek-accent">
+          {memberCount ?? Math.max(0, members.length - 1)} members
+        </span>
       </div>
 
       <div className="max-h-40 space-y-2 overflow-y-auto">
@@ -87,14 +95,15 @@ export function CollaboratorList({ workspaceId }: CollaboratorListProps) {
                 </div>
               </div>
 
-              {canManageMembers ? (
+              {canManage ? (
                 <div className="flex items-center gap-1">
                   <select
                     value={member.role === 'editor' ? 'Editor' : 'Viewer'}
+                    disabled={memberMutations.changeRole.isPending}
                     onChange={(event) =>
                       void changeRole(member.id, event.target.value as WorkspaceRole)
                     }
-                    className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700"
+                    className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 disabled:opacity-50"
                   >
                     <option value="Editor">Editor</option>
                     <option value="Viewer">Viewer</option>
@@ -102,8 +111,9 @@ export function CollaboratorList({ workspaceId }: CollaboratorListProps) {
                   <button
                     type="button"
                     onClick={() => void remove(member.id, member.username)}
+                    disabled={memberMutations.remove.isPending}
                     title="Remove member"
-                    className="p-1 text-slate-400 hover:text-rose-600"
+                    className="p-1 text-slate-400 hover:text-rose-600 disabled:opacity-50"
                   >
                     <Icon name="user-minus" />
                   </button>
@@ -117,32 +127,48 @@ export function CollaboratorList({ workspaceId }: CollaboratorListProps) {
           ))}
       </div>
 
-      {canManageMembers && (
-        <div className="flex items-center gap-2 border-t border-slate-200 pt-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="user@email.com"
-            className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] outline-none focus:border-geek-cyan"
-          />
-          <select
-            value={role}
-            onChange={(event) => setRole(event.target.value as WorkspaceRole)}
-            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[11px] font-bold outline-none"
-          >
-            <option value="Editor">Editor</option>
-            <option value="Viewer">Viewer</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => void add()}
-            disabled={!email.trim() || mutations.isMutating}
-            className="rounded-lg bg-geek-secondary px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-indigo-600 disabled:opacity-40"
-          >
-            Add
-          </button>
-        </div>
+      {canManage && (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void form.submit()
+          }}
+          className="border-t border-slate-200 pt-3"
+        >
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <input
+                type="email"
+                placeholder="user@email.com"
+                autoComplete="email"
+                {...form.form.register('email')}
+                className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] outline-none focus:border-geek-cyan"
+              />
+              {form.form.formState.errors.email && (
+                <p className="mt-1 text-[10px] font-bold text-rose-600">
+                  {form.form.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+            <select
+              {...form.form.register('role')}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[11px] font-bold outline-none"
+            >
+              <option value="Editor">Editor</option>
+              <option value="Viewer">Viewer</option>
+            </select>
+            <button
+              type="submit"
+              disabled={form.isPending}
+              className="rounded-lg bg-geek-secondary px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-indigo-600 disabled:opacity-40"
+            >
+              {form.isPending ? 'Adding...' : 'Add'}
+            </button>
+          </div>
+          <p className="mt-1 text-[10px] text-slate-400">
+            Role default: {role}. Hanya owner yang dapat mengelola anggota.
+          </p>
+        </form>
       )}
     </div>
   )

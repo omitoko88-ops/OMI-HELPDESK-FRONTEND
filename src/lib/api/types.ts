@@ -68,7 +68,7 @@ export interface CreateDocumentInput {
 
 export interface UpdateDocumentInput {
   title: string
-  content: string
+  content: string | null
 }
 
 export interface MoveDocumentInput {
@@ -115,3 +115,5 @@ export interface LoginResponse {
 export interface CurrentUserResponse {
   message: string
 }
+
+export type AdminWorkspacesResponse = WorkspaceDto[]

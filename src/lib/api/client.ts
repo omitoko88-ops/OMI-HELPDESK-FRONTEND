@@ -10,6 +10,12 @@ const developmentBaseUrl = import.meta.env.DEV
 // localhost hanya aktif saat development agar build produksi tidak salah arah.
 const BASE_URL = (configuredBaseUrl ?? developmentBaseUrl ?? '').replace(/\/$/, '')
 
+/** URL absolut untuk aset API (gambar/PDF). URL absolut dari backend dibiarkan apa adanya. */
+export function apiPath(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
+  return `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
+}
+
 type Query = Record<string, string | number | boolean | null | undefined>
 
 interface RequestOptions {
@@ -113,10 +119,7 @@ export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T
     }
   }
 
-  const envelope =
-    payload && typeof payload === 'object' && 'meta' in payload
-      ? (payload as ApiEnvelope<T>)
-      : null
+  const envelope = payload && typeof payload === 'object' ? (payload as ApiEnvelope<T>) : null
 
   if (!res.ok) {
     const error = errorFromResponse(
@@ -128,18 +131,22 @@ export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T
     throw error
   }
 
-  if (envelope) {
+  if (envelope && 'meta' in envelope) {
     if (!envelope.meta?.success) {
       throw errorFromResponse(res.status, payload, 'Permintaan gagal.')
     }
-    return envelope.data as T
+    return (envelope.data ?? null) as T
   }
 
   return payload as T
 }
 
-export async function apiUpload<T>(path: string, file: File): Promise<T> {
+export async function apiUpload<T>(
+  path: string,
+  file: File,
+  fieldName = 'file',
+): Promise<T> {
   const body = new FormData()
-  body.append('file', file)
+  body.append(fieldName, file)
   return api<T>(path, { method: 'POST', body, formData: true })
 }

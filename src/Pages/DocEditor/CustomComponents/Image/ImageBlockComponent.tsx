@@ -110,8 +110,8 @@ export default function ImageBlockComponent({
         src: url,
         alt: alt || file.name.replace(/\.[^.]+$/, ''),
       })
-    } catch {
-      setError('Upload gagal. Coba lagi.')
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Upload gagal. Coba lagi.')
     } finally {
       setBusy(false)
     }

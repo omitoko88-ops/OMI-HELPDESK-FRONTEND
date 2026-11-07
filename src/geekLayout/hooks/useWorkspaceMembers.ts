@@ -1,14 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { memberApi } from '@/lib/api/endpoints'
 import type { WorkspaceRole } from '@/lib/api/types'
-
-export function useWorkspaceMembers(workspaceId: string | undefined) {
-  return useQuery({
-    queryKey: ['members', workspaceId],
-    queryFn: ({ signal }) => memberApi.list(workspaceId!, signal),
-    enabled: Boolean(workspaceId),
-  })
-}
 
 export function useMemberMutations(workspaceId: string | undefined) {
   const queryClient = useQueryClient()

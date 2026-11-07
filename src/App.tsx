@@ -15,6 +15,7 @@ import RegisterPage from "./Pages/AuthPages/Register/RegisterPage";
 import { DocumentPage, DocumentsIndexPage } from "./geekLayout/pages/DocumentPage";
 import { PublicDocumentPage } from "./geekLayout/pages/PublicDocumentPage";
 import { WorkspaceMembersPage } from "./geekLayout/pages/WorkspaceMembersPage";
+import { AdminWorkspacesPage } from "./geekLayout/pages/AdminWorkspacesPage";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
                   <Route path="/docs" element={<DocumentsIndexPage />} />
                   <Route path="/docs/:documentId" element={<DocumentPage />} />
                   <Route path="/members" element={<WorkspaceMembersPage />} />
+                  <Route path="/admin/workspaces" element={<AdminWorkspacesPage />} />
                   <Route path="/edit" element={<DocEditor />} />
                   <Route path="/edit/:documentId" element={<DocEditor />} />
                 </Route>

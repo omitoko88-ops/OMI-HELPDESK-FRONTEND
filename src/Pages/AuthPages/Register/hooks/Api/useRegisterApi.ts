@@ -1,5 +1,5 @@
 import { useAppMutation } from '@/lib/ReactQueryHelper'
-import { api } from '@/lib/api/client'
+import { authApi } from '@/lib/api/endpoints'
 
 export interface RegisterPayload {
   username: string
@@ -13,11 +13,7 @@ export interface RegisterResult {
 }
 
 const registerUser = async (payload: RegisterPayload): Promise<RegisterResult> =>
-  api<RegisterResult>('/api/Auth/register', {
-    method: 'POST',
-    body: payload,
-    auth: false,
-  })
+  authApi.register(payload)
 
 export const useRegisterApi = () =>
   useAppMutation({

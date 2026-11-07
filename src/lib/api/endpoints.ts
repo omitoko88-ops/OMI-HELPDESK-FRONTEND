@@ -1,5 +1,6 @@
-import { api, apiUpload } from './client'
+import { api, apiPath, apiUpload } from './client'
 import type {
+  AdminWorkspacesResponse,
   CreateDocumentInput,
   CurrentUserResponse,
   DocumentDto,
@@ -22,8 +23,24 @@ import type {
 export const authApi = {
   login: (body: { username: string; password: string }) =>
     api<LoginResponse>('/api/Auth/login', { method: 'POST', body, auth: false }),
+  register: (body: {
+    username: string
+    email: string
+    password: string
+    confirmPassword: string
+  }) =>
+    api<{ message: string }>('/api/Auth/register', {
+      method: 'POST',
+      body,
+      auth: false,
+    }),
   me: (signal?: AbortSignal) =>
     api<CurrentUserResponse>('/api/Auth/me', { signal }),
+}
+
+export const adminApi = {
+  workspaces: (signal?: AbortSignal) =>
+    api<AdminWorkspacesResponse>('/api/Admin/get-all-workspaces', { signal }),
 }
 
 export const workspaceApi = {
@@ -137,6 +154,8 @@ export const publicApi = {
       `/api/public/documents/${token}/pages/${documentId}`,
       { method: 'PUT', body },
     ),
+  image: (filename: string) => apiPath(`/api/v1/images/${encodeURIComponent(filename)}`),
+  pdf: (filename: string) => apiPath(`/api/v1/pdfs/${encodeURIComponent(filename)}`),
 }
 
 export const uploadApi = {

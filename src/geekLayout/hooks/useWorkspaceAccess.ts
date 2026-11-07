@@ -24,21 +24,23 @@ export function useWorkspaceAccess(workspaceId: string | undefined) {
   const members: Collaborator[] = query.data
     ? [
         {
-          id: 'owner',
+          id: `owner:${query.data.owner.id}`,
           userId: query.data.owner.id,
           username: query.data.owner.username,
           email: query.data.owner.email,
           role: 'owner',
           joinedAt: undefined,
         },
-        ...query.data.members.map((member) => ({
-          id: member.id,
-          userId: member.userId,
-          username: member.username,
-          email: member.email,
-          role: member.role.toLowerCase() as 'editor' | 'viewer',
-          joinedAt: member.joinedAt,
-        })),
+        ...query.data.members
+          .filter((member) => member.userId !== query.data.owner.id)
+          .map((member) => ({
+            id: member.id,
+            userId: member.userId,
+            username: member.username,
+            email: member.email,
+            role: member.role.toLowerCase() as 'editor' | 'viewer',
+            joinedAt: member.joinedAt,
+          })),
       ]
     : []
 

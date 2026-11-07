@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useWorkspaceAccess } from '../../hooks/useWorkspaceAccess'
+import { useWorkspaceContext } from '../../context/WorkspaceContext'
 import { Icon } from '../ui/Icon'
 import { CollaboratorList } from './CollaboratorList'
 import { LinkAccessPanel } from './LinkAccessPanel'
@@ -8,7 +8,6 @@ interface ShareModalProps {
   isOpen: boolean
   documentId: string
   docTitle: string
-  workspaceId: string | undefined
   onClose: () => void
 }
 
@@ -16,11 +15,9 @@ export function ShareModal({
   isOpen,
   documentId,
   docTitle,
-  workspaceId,
   onClose,
 }: ShareModalProps) {
-  const { access } = useWorkspaceAccess(workspaceId)
-  const canWrite = access === 'owner' || access === 'editor'
+  const { accessLevel, canWrite, canManageMembers, members } = useWorkspaceContext()
 
   useEffect(() => {
     if (!isOpen) return
@@ -76,14 +73,17 @@ export function ShareModal({
         </div>
 
         <div className="space-y-5 p-6 font-mono text-xs">
-          {documentId && <LinkAccessPanel documentId={documentId} canWrite={canWrite} />}
-          {workspaceId && <CollaboratorList workspaceId={workspaceId} />}
+          {documentId && <LinkAccessPanel documentId={documentId} />}
+          <CollaboratorList
+            readOnly={!canManageMembers}
+            memberCount={members.length}
+          />
 
           <div className="flex items-center justify-between border-t border-slate-200 pt-3">
             <span className="text-[10px] text-slate-500">
-              {access === 'owner'
+              {accessLevel === 'owner'
                 ? 'Anda owner workspace: akses penuh.'
-                : access === 'editor'
+                : canWrite
                   ? 'Anda editor: dapat menulis dan membagikan.'
                   : 'Anda viewer: hanya dapat membaca.'}
             </span>

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
-import { documentApi } from '@/lib/api/endpoints'
 import type { DocNode } from '../../types'
+import { useWorkspaceDocuments } from '../../hooks/useDocumentQueries'
 import { Icon } from '../ui/Icon'
 
 interface SearchBarProps {
@@ -37,12 +36,11 @@ export function SearchBar({ docs, workspaceId }: SearchBarProps) {
     return () => window.clearTimeout(timer)
   }, [query])
 
-  const searchQuery = useQuery({
-    queryKey: ['documents', workspaceId, 'search', debouncedQuery],
-    queryFn: ({ signal }) =>
-      documentApi.list(workspaceId!, { search: debouncedQuery }, signal),
-    enabled: Boolean(workspaceId && debouncedQuery),
-  })
+  const searchQuery = useWorkspaceDocuments(
+    workspaceId,
+    { search: debouncedQuery },
+    Boolean(workspaceId && debouncedQuery),
+  )
 
   const results = useMemo(() => {
     const term = query.trim().toLowerCase()

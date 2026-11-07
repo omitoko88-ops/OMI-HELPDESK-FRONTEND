@@ -16,6 +16,7 @@ interface SidebarProps {
   onAddRoot: () => void
   onInvite: () => void
   memberCount: number
+  showAdminLink?: boolean
 }
 
 /** Left column: workspace navigation, document tree, and member summary. */
@@ -31,6 +32,7 @@ export function Sidebar({
   onAddRoot,
   onInvite,
   memberCount,
+  showAdminLink = false,
 }: SidebarProps) {
   const canWrite = access === 'owner' || access === 'editor'
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -63,6 +65,12 @@ export function Sidebar({
             <Icon name="pen-to-square" className="w-3.5 text-center" />
             <span>Editor</span>
           </NavLink>
+          {showAdminLink && (
+            <NavLink to="/admin/workspaces" className={navLinkClass}>
+              <Icon name="shield-halved" className="w-3.5 text-center" />
+              <span>Admin</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="border-t border-slate-200" />

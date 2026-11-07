@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
-import { Link, useOutletContext, useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import PageMeta from '@/components/common/PageMeta'
-import type { LayoutOutletContext } from '@/geekLayout/GeekLayout'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useWorkspaceContext } from '@/geekLayout/context/WorkspaceContext'
 import type { DocNode } from '@/geekLayout/types'
 import { Icon } from '@/geekLayout/components/ui/Icon'
-import { InputDialog } from '@/geekLayout/components/common/InputDialog'
-import { documentApi } from '@/lib/api/endpoints'
+import { FormDialog } from '@/geekLayout/components/common/FormDialog'
+import { useCreateDocumentForm } from '@/geekLayout/hooks/useDocumentForm'
 import type { DocumentListItemDto } from '@/lib/api/types'
 
 interface FlatDocument extends DocumentListItemDto {
@@ -49,23 +50,19 @@ export const Home = () => {
     activeWorkspace,
     workspaces,
     docs,
-    access,
+    accessLevel,
     members,
     openShare,
     refreshDocs,
-  } = useOutletContext<LayoutOutletContext>()
+    canWrite,
+    tree,
+    documents,
+  } = useWorkspaceContext()
   const [createOpen, setCreateOpen] = useState(false)
-  const [busy, setBusy] = useState(false)
-
-  const listQuery = useQuery({
-    queryKey: ['documents', activeWorkspace?.id, 'list'],
-    queryFn: ({ signal }) => documentApi.list(activeWorkspace!.id, undefined, signal),
-    enabled: Boolean(activeWorkspace),
-  })
 
   const flatDocs = useMemo(() => flatten(docs), [docs])
   const recentDocuments = useMemo(() => {
-    const apiDocuments = listQuery.data
+    const apiDocuments = documents.data
     if (apiDocuments?.length) {
       const parentTitles = new Map(flatDocs.map((doc) => [doc.id, doc.parentTitle]))
       return [...apiDocuments]
@@ -80,10 +77,9 @@ export const Home = () => {
     return [...flatDocs]
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
-  }, [flatDocs, listQuery.data])
+  }, [documents.data, flatDocs])
 
-  const canWrite = access === 'owner' || access === 'editor'
-  const documentCount = listQuery.data?.length ?? flatDocs.length
+  const documentCount = documents.data?.length ?? flatDocs.length
   const memberCount = members.length
   const rootCount = docs.length
   const childCount = Math.max(0, documentCount - rootCount)
@@ -106,7 +102,7 @@ export const Home = () => {
     {
       label: 'Collaborators',
       value: String(memberCount).padStart(2, '0'),
-      detail: `Akses Anda: ${access}`,
+      detail: `Akses Anda: ${accessLevel}`,
       icon: 'users',
       iconClass: 'bg-emerald-50 text-geek-accent border-emerald-100',
     },
@@ -119,26 +115,18 @@ export const Home = () => {
     },
   ]
 
-  const createDocument = async (title: string) => {
-    const value = title.trim()
-    if (!value || !activeWorkspace || !canWrite) return
-    setBusy(true)
-    try {
-      const created = await documentApi.create(activeWorkspace.id, {
-        title: value,
-        parentId: null,
-      })
+  const documentForm = useCreateDocumentForm({
+    isPending: tree.isMutating,
+    onSubmit: async ({ title }) => {
+      if (!activeWorkspace || !canWrite) return
+      const created = await tree.addRoot(title)
       toast.success('Dokumen berhasil dibuat.')
       setCreateOpen(false)
       refreshDocs()
-      await listQuery.refetch()
+      await documents.refetch()
       navigate(`/docs/${created.id}`)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Gagal membuat dokumen.')
-    } finally {
-      setBusy(false)
-    }
-  }
+    },
+  })
 
   return (
     <div className="min-h-full w-full bg-geek-bg">
@@ -160,7 +148,7 @@ export const Home = () => {
                   {activeWorkspace?.name ?? 'Belum ada workspace'}
                 </span>
                 <span className="rounded-md border border-indigo-100 bg-indigo-50 px-2 py-1 text-indigo-700">
-                  {access}
+                  {accessLevel}
                 </span>
               </div>
 
@@ -235,7 +223,7 @@ export const Home = () => {
             </div>
 
             <div className="divide-y divide-slate-100">
-              {listQuery.isLoading ? (
+              {documents.isLoading ? (
                 [1, 2, 3].map((item) => (
                   <div key={item} className="px-5 py-4 sm:px-6">
                     <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
@@ -334,17 +322,31 @@ export const Home = () => {
         </div>
       </div>
 
-      <InputDialog
+      <FormDialog
         open={createOpen}
         title="New document"
         description="Dokumen akan dibuat di root workspace aktif."
-        label="Judul dokumen"
-        placeholder="Contoh: Panduan onboarding"
         confirmText="Buat dokumen"
-        isPending={busy}
+        isPending={documentForm.isPending}
+        submitDisabled={!documentForm.form.formState.isValid}
         onOpenChange={setCreateOpen}
-        onConfirm={(value) => void createDocument(value)}
-      />
+        onSubmit={() => void documentForm.submit()}
+      >
+        <div className="space-y-2">
+          <Label htmlFor="overview-document-title">Judul dokumen</Label>
+          <Input
+            id="overview-document-title"
+            placeholder="Contoh: Panduan onboarding"
+            autoFocus
+            {...documentForm.form.register('title')}
+          />
+          {documentForm.form.formState.errors.title && (
+            <p className="text-xs text-rose-600">
+              {documentForm.form.formState.errors.title.message}
+            </p>
+          )}
+        </div>
+      </FormDialog>
     </div>
   )
 }

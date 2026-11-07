@@ -14,7 +14,6 @@ interface MainContentProps {
   workspace: Workspace | null
   tree: DocumentTreeNode[]
   access: WorkspaceAccess
-  onShare: (documentId: string, title: string) => void
 }
 
 const timeAgo = (value: string) => {
@@ -41,7 +40,6 @@ export function MainContent({
   workspace,
   tree,
   access,
-  onShare,
 }: MainContentProps) {
   const navigate = useNavigate()
   const documentQuery = useDocument(documentId)
@@ -104,7 +102,6 @@ export function MainContent({
           workspaceName={workspace?.name ?? 'Workspace'}
           tree={tree}
           canWrite={canWrite}
-          onShare={onShare}
           onDeleted={() => navigate('/docs')}
         />
         <DocumentHeader

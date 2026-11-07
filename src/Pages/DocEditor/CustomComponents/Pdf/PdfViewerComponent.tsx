@@ -69,8 +69,8 @@ export default function PdfViewerComponent({
         src: url,
         title: title || file.name.replace(/\.pdf$/i, ''),
       })
-    } catch {
-      setError('Upload gagal. Coba lagi.')
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Upload gagal. Coba lagi.')
     } finally {
       setBusy(false)
     }

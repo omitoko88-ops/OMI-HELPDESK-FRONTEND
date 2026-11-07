@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { workspaceApi } from '@/lib/api/endpoints'
+import { memberApi, workspaceApi } from '@/lib/api/endpoints'
 import type { WorkspaceDto } from '@/lib/api/types'
 import type { Workspace } from '../types'
 
@@ -41,6 +41,16 @@ export function useWorkspaces() {
 
   const activeWorkspace =
     workspaces.find((workspace) => workspace.id === activeId) ?? workspaces[0] ?? null
+
+  const detail = useQuery({
+    queryKey: ['workspace', activeWorkspace?.id],
+    queryFn: ({ signal }) => workspaceApi.get(activeWorkspace!.id, signal),
+    enabled: Boolean(activeWorkspace?.id),
+    placeholderData: (previousData, previousQuery) => {
+      const previousId = previousQuery?.queryKey[1]
+      return previousId === activeWorkspace?.id ? previousData : undefined
+    },
+  })
 
   useEffect(() => {
     if (activeWorkspace && activeWorkspace.id !== activeId) {
@@ -85,6 +95,20 @@ export function useWorkspaces() {
     },
   })
 
+  const leave = useMutation({
+    mutationFn: (id: string) => memberApi.leave(id),
+    onSuccess: async (_data, id) => {
+      if (activeId === id) {
+        const remaining = workspaces.filter((workspace) => workspace.id !== id)
+        if (remaining[0]) selectWorkspace(remaining[0].id)
+        else setActiveId('')
+      }
+      await invalidateWorkspaces()
+      await queryClient.invalidateQueries({ queryKey: ['documents'] })
+      await queryClient.invalidateQueries({ queryKey: ['members'] })
+    },
+  })
+
   return {
     ...query,
     workspaces,
@@ -93,7 +117,13 @@ export function useWorkspaces() {
     createWorkspace: createMutation.mutateAsync,
     renameWorkspace: renameMutation.mutateAsync,
     deleteWorkspace: removeMutation.mutateAsync,
+    leaveWorkspace: leave.mutateAsync,
+    detail,
+    error: query.error,
     isMutating:
-      createMutation.isPending || renameMutation.isPending || removeMutation.isPending,
+      createMutation.isPending ||
+      renameMutation.isPending ||
+      removeMutation.isPending ||
+      leave.isPending,
   }
 }

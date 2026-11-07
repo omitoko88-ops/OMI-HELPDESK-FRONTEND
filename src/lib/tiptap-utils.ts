@@ -1,5 +1,6 @@
 import type { Attrs, Node } from "@tiptap/pm/model"
 import type { Editor } from "@tiptap/react"
+import { uploadImage } from "@/lib/uploadPdf"
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -150,19 +151,13 @@ export const handleImageUpload = async (
     )
   }
 
-  // For demo/testing: Simulate upload progress
-  for (let progress = 0; progress <= 100; progress += 10) {
-    if (abortSignal?.aborted) {
-      throw new Error("Upload cancelled")
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    onProgress?.({ progress })
-  }
+  if (abortSignal?.aborted) throw new Error("Upload cancelled")
 
-  return "/images/placeholder-image.png"
-
-  // Uncomment for production use:
-  // return convertFileToBase64(file, abortSignal);
+  onProgress?.({ progress: 10 })
+  const url = await uploadImage(file)
+  if (abortSignal?.aborted) throw new Error("Upload cancelled")
+  onProgress?.({ progress: 100 })
+  return url
 }
 
 /**

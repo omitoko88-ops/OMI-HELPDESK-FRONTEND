@@ -1,36 +1,37 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useOutletContext, useParams } from 'react-router'
+import { useEffect, useMemo } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { TiptapEditorHtmlOutput } from './TiptapEditor'
 import { useDocument, useSaveDocument } from '@/geekLayout/hooks/useDocumentQueries'
 import { useTreeStore } from '@/stores/docUiStore'
 import { Icon } from '@/geekLayout/components/ui/Icon'
-import type { LayoutOutletContext } from '@/geekLayout/GeekLayout'
+import { useWorkspaceContext } from '@/geekLayout/context/WorkspaceContext'
+import { useUpdateDocumentForm } from '@/geekLayout/hooks/useDocumentForm'
 import type { DocNode } from '@/geekLayout/types'
 
 export const DocEditor = () => {
   const { documentId } = useParams<{ documentId: string }>()
   const navigate = useNavigate()
-  const { activeWorkspace, access, docs, openShare, refreshDocs } =
-    useOutletContext<LayoutOutletContext>()
-  const canWrite = access === 'owner' || access === 'editor'
+  const { activeWorkspace, accessLevel, docs, openShare, refreshDocs, canWrite } =
+    useWorkspaceContext()
   const documentQuery = useDocument(documentId)
   const setExpanded = useTreeStore((state) => state.setExpanded)
   const saveDocument = useSaveDocument(documentId)
 
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [dirty, setDirty] = useState(false)
-  const [lastLoadedId, setLastLoadedId] = useState<string | undefined>(undefined)
-
-  useEffect(() => {
-    const document = documentQuery.data
-    if (!document || document.id === lastLoadedId) return
-    setTitle(document.title)
-    setContent(document.content ?? '')
-    setDirty(false)
-    setLastLoadedId(document.id)
-  }, [documentQuery.data, lastLoadedId])
+  const documentForm = useUpdateDocumentForm({
+    title: documentQuery.data?.title ?? '',
+    content: documentQuery.data?.content ?? null,
+    isPending: saveDocument.isPending,
+    onSubmit: async ({ title, content }) => {
+      if (!documentId || !canWrite) return
+      const updated = await saveDocument.mutateAsync({ title, content })
+      toast.success('Dokumen tersimpan.')
+      if (updated.parentId) setExpanded(updated.parentId, true)
+      refreshDocs()
+    },
+  })
+  const title = documentForm.form.watch('title')
+  const dirty = documentForm.form.formState.isDirty
 
   const parentTitle = useMemo(() => {
     if (!documentQuery.data?.parentId) return 'Workspace root'
@@ -44,24 +45,6 @@ export const DocEditor = () => {
     }
     return find(docs) ?? 'Workspace root'
   }, [documentQuery.data?.parentId, docs])
-
-  const save = async () => {
-    if (!documentId || !canWrite) return
-    const cleanTitle = title.trim()
-    if (!cleanTitle) {
-      toast.error('Judul dokumen wajib diisi.')
-      return
-    }
-    try {
-      const updated = await saveDocument.mutateAsync({ title: cleanTitle, content })
-      setDirty(false)
-      toast.success('Dokumen tersimpan.')
-      if (updated.parentId) setExpanded(updated.parentId, true)
-      refreshDocs()
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Gagal menyimpan dokumen.')
-    }
-  }
 
   useEffect(() => {
     if (!dirty || !canWrite) return
@@ -129,7 +112,7 @@ export const DocEditor = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold uppercase text-slate-500">
-            {access}
+            {accessLevel}
           </span>
           <Link
             to={`/docs/${documentId}`}
@@ -152,12 +135,12 @@ export const DocEditor = () => {
           )}
           <button
             type="button"
-            onClick={() => void save()}
-            disabled={!canWrite || saveDocument.isPending || !dirty}
+            onClick={() => void documentForm.submit()}
+            disabled={!canWrite || documentForm.isPending || !dirty}
             className="flex items-center gap-1.5 rounded-lg bg-geek-secondary px-3 py-1.5 font-bold text-white hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Icon name={saveDocument.isPending ? 'circle-notch' : 'floppy-disk'} className={saveDocument.isPending ? 'animate-spin' : ''} />
-            {saveDocument.isPending ? 'Saving...' : 'Save'}
+            <Icon name={documentForm.isPending ? 'circle-notch' : 'floppy-disk'} className={documentForm.isPending ? 'animate-spin' : ''} />
+            {documentForm.isPending ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
@@ -169,15 +152,16 @@ export const DocEditor = () => {
       )}
 
       <input
-        value={title}
-        onChange={(event) => {
-          setTitle(event.target.value)
-          setDirty(true)
-        }}
+        {...documentForm.form.register('title')}
         readOnly={!canWrite}
         placeholder="Untitled document"
         className="w-full rounded-lg border border-transparent bg-transparent px-1 py-2 font-mono text-3xl font-bold text-slate-900 outline-none focus:border-slate-200 focus:bg-slate-50 read-only:opacity-80"
       />
+      {documentForm.form.formState.errors.title && (
+        <p className="text-xs text-rose-600">
+          {documentForm.form.formState.errors.title.message}
+        </p>
+      )}
 
       <div className="min-h-0 flex-1">
         <TiptapEditorHtmlOutput
@@ -185,8 +169,7 @@ export const DocEditor = () => {
           editable={canWrite}
           showToolbar={canWrite}
           onChangeHtml={(value) => {
-            setContent(value)
-            setDirty(true)
+            documentForm.form.setValue('content', value, { shouldDirty: true })
           }}
         />
       </div>

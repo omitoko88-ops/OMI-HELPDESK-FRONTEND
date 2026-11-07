@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import type { DocumentDto, DocumentTreeNode } from '@/lib/api/types'
+import { useWorkspaceContext } from '../../context/WorkspaceContext'
 import { useDocumentActions } from '../../hooks/useDocumentQueries'
 import { Icon } from '../ui/Icon'
 
@@ -9,7 +10,6 @@ interface DocumentToolbarProps {
   workspaceName: string
   tree: DocumentTreeNode[]
   canWrite: boolean
-  onShare: (documentId: string, title: string) => void
   onDeleted?: () => void
 }
 
@@ -45,9 +45,9 @@ export function DocumentToolbar({
   workspaceName,
   tree,
   canWrite,
-  onShare,
   onDeleted,
 }: DocumentToolbarProps) {
+  const { openShare } = useWorkspaceContext()
   const path = findPath(tree, document.id)
   const actions = useDocumentActions(document.id)
   const currentNode = flatten(tree).find((node) => node.id === document.id)
@@ -109,7 +109,7 @@ export function DocumentToolbar({
         {canWrite && (
           <button
             type="button"
-            onClick={() => onShare(document.id, document.title)}
+            onClick={() => openShare(document.id, document.title)}
             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg font-bold flex items-center gap-1.5 transition-all"
           >
             <Icon name="share-nodes" className="text-geek-cyan" />

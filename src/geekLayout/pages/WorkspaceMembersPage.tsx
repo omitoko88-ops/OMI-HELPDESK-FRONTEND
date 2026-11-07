@@ -1,10 +1,10 @@
-import { Link, useOutletContext } from 'react-router'
-import type { LayoutOutletContext } from '../GeekLayout'
+import { Link } from 'react-router'
 import { Icon } from '../components/ui/Icon'
 import { CollaboratorList } from '../components/share/CollaboratorList'
+import { useWorkspaceContext } from '../context/WorkspaceContext'
 
 export function WorkspaceMembersPage() {
-  const { activeWorkspace, access, members } = useOutletContext<LayoutOutletContext>()
+  const { activeWorkspace, accessLevel, members, canManageMembers } = useWorkspaceContext()
 
   if (!activeWorkspace) {
     return (
@@ -29,15 +29,15 @@ export function WorkspaceMembersPage() {
         </p>
         <h1 className="mt-1 font-mono text-2xl font-bold text-slate-900">{activeWorkspace.name}</h1>
         <p className="mt-1 text-xs text-slate-500">
-          {members.length} orang memiliki akses · akses Anda {access}
+          {members.length} orang memiliki akses · akses Anda {accessLevel}
         </p>
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <CollaboratorList workspaceId={activeWorkspace.id} />
+        <CollaboratorList />
       </section>
 
-      {access !== 'owner' && (
+      {!canManageMembers && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 font-mono text-[11px] leading-relaxed text-amber-800">
           Hanya owner workspace yang dapat menambah anggota, mengubah role, atau mengeluarkan
           anggota. Anda tetap dapat melihat daftar anggota yang memiliki akses.
