@@ -325,6 +325,8 @@ export const Home = () => {
       <FormDialog
         open={createOpen}
         title="New document"
+        eyebrow="// CREATE_DOCUMENT"
+        icon="file-circle-plus"
         description="Dokumen akan dibuat di root workspace aktif."
         confirmText="Buat dokumen"
         isPending={documentForm.isPending}
@@ -333,11 +335,17 @@ export const Home = () => {
         onSubmit={() => void documentForm.submit()}
       >
         <div className="space-y-2">
-          <Label htmlFor="overview-document-title">Judul dokumen</Label>
+          <Label
+            htmlFor="overview-document-title"
+            className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500"
+          >
+            Judul dokumen
+          </Label>
           <Input
             id="overview-document-title"
             placeholder="Contoh: Panduan onboarding"
             autoFocus
+            className="h-auto rounded-xl border-slate-300 bg-slate-50 px-3 py-2.5 font-mono text-xs text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-geek-cyan focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-geek-cyan/40"
             {...documentForm.form.register('title')}
           />
           {documentForm.form.formState.errors.title && (

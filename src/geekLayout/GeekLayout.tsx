@@ -146,6 +146,8 @@ function GeekLayoutContent() {
       <FormDialog
         open={dialog?.type === 'create' || dialog?.type === 'rename'}
         title={dialog?.type === 'rename' ? 'Rename workspace' : 'Create workspace'}
+        eyebrow={dialog?.type === 'rename' ? '// RENAME_WORKSPACE' : '// CREATE_WORKSPACE'}
+        icon={dialog?.type === 'rename' ? 'pen' : 'cubes'}
         description={
           dialog?.type === 'rename'
             ? 'Ubah nama workspace yang sedang aktif.'
@@ -158,11 +160,17 @@ function GeekLayoutContent() {
         onSubmit={() => void workspaceForm.submit()}
       >
         <div className="space-y-2">
-          <Label htmlFor="workspace-name">Nama workspace</Label>
+          <Label
+            htmlFor="workspace-name"
+            className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500"
+          >
+            Nama workspace
+          </Label>
           <Input
             id="workspace-name"
             placeholder="Contoh: Engineering Docs"
             autoFocus
+            className="h-auto rounded-xl border-slate-300 bg-slate-50 px-3 py-2.5 font-mono text-xs text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-geek-cyan focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-geek-cyan/40"
             {...workspaceForm.form.register('name')}
           />
           {workspaceForm.form.formState.errors.name && (
@@ -176,6 +184,8 @@ function GeekLayoutContent() {
       <FormDialog
         open={dialog?.type === 'createDocument'}
         title={dialog?.type === 'createDocument' && dialog.parentId ? 'New sub-page' : 'New document'}
+        eyebrow={dialog?.type === 'createDocument' && dialog.parentId ? '// CREATE_SUB_PAGE' : '// CREATE_DOCUMENT'}
+        icon="file-circle-plus"
         description={
           dialog?.type === 'createDocument' && dialog.parentId
             ? `Sub-halaman baru di bawah "${dialog.parentTitle}".`
@@ -188,11 +198,17 @@ function GeekLayoutContent() {
         onSubmit={() => void documentForm.submit()}
       >
         <div className="space-y-2">
-          <Label htmlFor="document-title">Judul dokumen</Label>
+          <Label
+            htmlFor="document-title"
+            className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-500"
+          >
+            Judul dokumen
+          </Label>
           <Input
             id="document-title"
             placeholder="Contoh: Panduan onboarding"
             autoFocus
+            className="h-auto rounded-xl border-slate-300 bg-slate-50 px-3 py-2.5 font-mono text-xs text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:border-geek-cyan focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-geek-cyan/40"
             {...documentForm.form.register('title')}
           />
           {documentForm.form.formState.errors.title && (
