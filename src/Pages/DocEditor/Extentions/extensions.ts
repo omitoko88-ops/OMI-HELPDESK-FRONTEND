@@ -1,4 +1,5 @@
 import { uploadImage, uploadPdf } from '@/lib/uploadPdf'
+import { TextStyleKit } from '@tiptap/extension-text-style'
 import Image from '@tiptap/extension-image'
 import StarterKit from '@tiptap/starter-kit'
 import TaskList from '@tiptap/extension-task-list'
@@ -24,6 +25,9 @@ import {
   CustomTableHeader,
 } from '../CustomComponents/Table/CustomTableCells'
 import { ImageBlock } from '../CustomComponents/Image/ImageBlock'
+import { ListVariant } from '../CustomComponents/List/ListVariant'
+import { ListItemWithHeading } from '../CustomComponents/List/ListItemWithHeading'
+import { BlockLineHeight } from '../CustomComponents/TextStyle/BlockLineHeight'
 
 export const createEditorExtensions = () => [
   StarterKit.configure({
@@ -31,7 +35,11 @@ export const createEditorExtensions = () => [
       color: 'var(--primary)',
       width: 2,
     },
+    listItem: false,
   }),
+
+  TextStyleKit.configure({ lineHeight: false }),
+  BlockLineHeight,
 
   CustomSeparator,
   Badge,
@@ -41,6 +49,9 @@ export const createEditorExtensions = () => [
   TabPanel,
   CodeTabs,
   CodeTab,
+
+  ListVariant,
+  ListItemWithHeading,
 
   PdfViewer.configure({
     upload: uploadPdf,

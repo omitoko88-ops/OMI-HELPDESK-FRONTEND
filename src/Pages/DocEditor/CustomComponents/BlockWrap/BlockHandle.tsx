@@ -31,12 +31,24 @@ export const BlockHandle = ({ editor }: { editor: Editor }) => {
 
   const addBelow = () => {
     if (!node || pos < 0) return
-    const at = pos + node.nodeSize
+    const at = pos + node.nodeSize // posisi tepat setelah blok/item yang ditarget
+
+    // List hanya menerima listItem/taskItem sebagai anak langsung, jadi kalau
+    // targetnya sebuah item, buat ITEM baru dengan jenis yang sama (bukan paragraf).
+    const isItem =
+      node.type.name === 'listItem' || node.type.name === 'taskItem'
+
     editor
       .chain()
       .focus()
-      .insertContentAt(at, { type: 'paragraph' })
-      .setTextSelection(at + 1)
+      .insertContentAt(
+        at,
+        isItem
+          ? { type: node.type.name, content: [{ type: 'paragraph' }] }
+          : { type: 'paragraph' },
+      )
+      // Item: lewati pembuka <li> dan <p> (+2). Blok biasa: cukup pembuka <p> (+1).
+      .setTextSelection(at + (isItem ? 2 : 1))
       .run()
   }
 
@@ -88,9 +100,21 @@ export const BlockHandle = ({ editor }: { editor: Editor }) => {
   return (
     <DragHandle
       editor={editor}
+      nested={{
+        // Bawaan 'left': kursor <=12px dari tepi kiri item -> yang dipilih INDUKNYA
+        // (seluruh list). 'none' mematikannya, jadi handle selalu menempel pada
+        // item yang sedang di-hover. Inilah yang memperbaiki masalahmu.
+        edgeDetection: 'none',
+
+        // OPSIONAL: batasi handle bersarang hanya di dalam list. Blok level atas
+        // (tabel, tabs, dll.) tetap bisa di-drag. Hapus komentar kalau mau dipakai.
+        // allowedContainers: ['bulletList', 'orderedList', 'taskList'],
+      }}
       onNodeChange={({ node, pos }) => {
         setTarget({ node, pos })
-        setOpen(false)
+        // Tes sementara: hover sebuah item list lalu lihat Console browser.
+        // Harus tercetak "listItem" (atau "taskItem"), bukan "orderedList".
+        // console.log('handle menargetkan:', node?.type.name)
       }}
     >
       <div

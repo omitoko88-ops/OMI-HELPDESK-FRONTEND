@@ -1,0 +1,239 @@
+/* doc-lists.css
+   Semua aturan di bawah diawali ".doc-lists", jadi hanya berlaku di dalam elemen
+   yang diberi class "doc-lists" (EditorContent di editor dan viewer).
+   Class "prose" dari Tailwind Typography punya spesifisitas rendah, jadi aturan kita yang menang. */
+
+/* ===================== 1. WARNA AKSEN =====================
+   Semua warna dipusatkan di dua variabel ini supaya gampang diganti.
+   - Tailwind v3 + shadcn (token format HSL)  : hsl(var(--primary))
+   - Tailwind v4 + shadcn (token format oklch): var(--primary)  <- ganti baris ini kalau v4 */
+.doc-lists {
+  --doc-accent: hsl(var(--primary)); /* warna titik, nomor, ikon panah */
+  --doc-muted: hsl(var(--muted-foreground)); /* warna ikon strip */
+}
+
+/* ===================== 2. SPASI DASAR ===================== */
+
+/* Jarak atas-bawah antar item list */
+.doc-lists li {
+  margin-block: 0.25rem;
+}
+
+/* Tiptap membungkus teks item dalam <p>. Margin paragraf dinolkan
+   supaya item tidak terlihat renggang. */
+.doc-lists li > p {
+  margin: 0;
+}
+
+/* List di dalam item (nested) dirapatkan ke teks induknya:
+   margin atas 0.25rem, margin bawah 0 */
+.doc-lists li > ul,
+.doc-lists li > ol {
+  margin-block: 0.25rem 0;
+}
+
+/* ===================== 3. BULLET OTOMATIS (• → ◦ → ▪) =====================
+   "Bullet polos" = <ul> TANPA data-variant dan BUKAN task list.
+   :not(a, b) artinya "bukan a dan bukan b". Pengecualian ini penting supaya
+   list bergaya (centang dkk) dan task list tidak ikut kena aturan titik,
+   termasuk saat bersarang di dalam bullet polos. */
+
+/* Level 1: titik penuh */
+.doc-lists ul:not([data-variant], [data-type='taskList']) {
+  list-style-type: disc;
+}
+/* Level 2: <ul> polos di dalam <ul> polos, titik kosong */
+.doc-lists
+  ul:not([data-variant], [data-type='taskList'])
+  ul:not([data-variant], [data-type='taskList']) {
+  list-style-type: circle;
+}
+/* Level 3 dan seterusnya: kotak */
+.doc-lists
+  ul:not([data-variant], [data-type='taskList'])
+  ul:not([data-variant], [data-type='taskList'])
+  ul:not([data-variant], [data-type='taskList']) {
+  list-style-type: square;
+}
+
+/* ::marker = penanda bawaan list (titik atau angka). Hanya warna yang boleh diubah. */
+.doc-lists ul > li::marker {
+  color: var(--doc-accent);
+}
+
+/* ===================== 4. BULLET BERGAYA (✓ ✕ → –) =====================
+   Penanda bawaan dimatikan (list-style: none), lalu ikon digambar sendiri
+   lewat ::before di sisi kiri tiap item. */
+
+.doc-lists ul[data-variant] {
+  list-style: none; /* matikan titik bawaan */
+  padding-left: 0; /* hapus indentasi bawaan, karena ikon dibuat manual */
+}
+.doc-lists ul[data-variant] > li {
+  position: relative; /* jadi acuan posisi untuk ikon (absolute) */
+  padding-left: 1.75rem; /* sisakan ruang untuk ikon di kiri */
+}
+.doc-lists ul[data-variant] > li::before {
+  position: absolute; /* ikon ditaruh bebas tanpa menggeser teks */
+  left: 0;
+  top: 0; /* sejajar dengan baris pertama teks */
+  font-weight: 700;
+}
+/* Isi ikon dan warnanya untuk tiap gaya */
+.doc-lists ul[data-variant='check'] > li::before {
+  content: '✓';
+  color: #22c55e;
+}
+.doc-lists ul[data-variant='cross'] > li::before {
+  content: '✕';
+  color: #ef4444;
+}
+.doc-lists ul[data-variant='arrow'] > li::before {
+  content: '→';
+  color: var(--doc-accent);
+}
+.doc-lists ul[data-variant='dash'] > li::before {
+  content: '–';
+  color: var(--doc-muted);
+}
+
+/* ===================== 5. NUMBERED OTOMATIS (1 → a → i) =====================
+   Hanya untuk <ol> TANPA data-variant, jadi pilihan manual dari dropdown
+   tidak pernah tertimpa aturan otomatis ini. */
+
+/* Level 1: 1, 2, 3 */
+.doc-lists ol:not([data-variant]) {
+  list-style-type: decimal;
+}
+/* Level 2: a, b, c */
+.doc-lists ol:not([data-variant]) ol:not([data-variant]) {
+  list-style-type: lower-alpha;
+}
+/* Level 3: i, ii, iii */
+.doc-lists
+  ol:not([data-variant])
+  ol:not([data-variant])
+  ol:not([data-variant]) {
+  list-style-type: lower-roman;
+}
+/* Level 4 dan seterusnya: kembali ke angka */
+.doc-lists
+  ol:not([data-variant])
+  ol:not([data-variant])
+  ol:not([data-variant])
+  ol:not([data-variant]) {
+  list-style-type: decimal;
+}
+
+/* Nomor dibuat tebal dan berwarna aksen */
+.doc-lists ol > li::marker {
+  color: var(--doc-accent);
+  font-weight: 600;
+}
+
+/* Gaya manual dari dropdown. Hanya mengenai <ol> yang punya data-variant. */
+.doc-lists ol[data-variant='alpha'] {
+  list-style-type: lower-alpha;
+}
+.doc-lists ol[data-variant='roman'] {
+  list-style-type: lower-roman;
+}
+
+/* ===================== 6. NUMBERED "BADGE" (nomor dalam lingkaran) =====================
+   Penanda bawaan tidak bisa dibentuk lingkaran, jadi dipakai CSS counter:
+   hitungan dibuat sendiri, lalu ditampilkan lewat ::before.
+   Catatan: gaya ini selalu mulai dari 1 (atribut "start" diabaikan). */
+
+.doc-lists ol[data-variant='badge'] {
+  list-style: none; /* matikan angka bawaan */
+  padding-left: 0;
+  counter-reset: doc-item; /* mulai hitungan baru. <ol> bersarang punya hitungan sendiri */
+}
+.doc-lists ol[data-variant='badge'] > li {
+  position: relative;
+  min-height: 1.75rem; /* tinggi minimal = tinggi lingkaran */
+  padding-left: 2.5rem; /* ruang untuk lingkaran di kiri */
+  margin-block: 0.75rem;
+  counter-increment: doc-item; /* tambah hitungan 1 setiap ada item */
+}
+.doc-lists ol[data-variant='badge'] > li::before {
+  content: counter(doc-item); /* tampilkan angka hitungan */
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex; /* flex + center = angka tepat di tengah lingkaran */
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px; /* bulat penuh */
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--doc-accent);
+  /* Latar = warna aksen 15%, tembus pandang, jadi aman di light dan dark mode */
+  background: color-mix(in srgb, var(--doc-accent) 15%, transparent);
+}
+
+/* ===================== 7. TASK LIST (checklist) =====================
+   Struktur HTML dari Tiptap: <li data-checked><label><input/></label><div><p>isi</p></div></li> */
+
+.doc-lists ul[data-type='taskList'] {
+  list-style: none; /* tanpa titik, karena sudah ada kotak centang */
+  padding-left: 0;
+}
+/* Task list di dalam task list: geser sedikit ke kanan */
+.doc-lists ul[data-type='taskList'] ul[data-type='taskList'] {
+  margin-left: 0.5rem;
+}
+
+.doc-lists ul[data-type='taskList'] > li {
+  display: flex; /* kotak centang di kiri, teks di kanan */
+  align-items: flex-start; /* kotak sejajar dengan baris pertama */
+  gap: 0.5rem;
+}
+.doc-lists ul[data-type='taskList'] > li > label {
+  flex-shrink: 0; /* kotak tidak boleh menyusut */
+  margin-top: 0.3rem; /* turunkan sedikit agar sejajar dengan teks */
+  user-select: none;
+}
+.doc-lists ul[data-type='taskList'] > li > div {
+  flex: 1; /* teks mengisi sisa lebar */
+  min-width: 0; /* mencegah teks panjang melebar keluar */
+}
+/* Paragraf di dalam task item juga dinolkan marginnya */
+.doc-lists ul[data-type='taskList'] > li > div > p {
+  margin: 0;
+}
+
+.doc-lists ul[data-type='taskList'] input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--doc-accent); /* warna kotak centang mengikuti aksen */
+}
+/* Item yang sudah dicentang: teks dicoret dan diredupkan */
+.doc-lists ul[data-type='taskList'] > li[data-checked='true'] > div {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Indentasi dasar semua list.
+   Tidak boleh bergantung pada class "prose": Tailwind (preflight) mengosongkan
+   padding ul/ol, dan tanpa plugin typography list jadi tidak menjorok. */
+.doc-lists ul,
+.doc-lists ol {
+  padding-left: 1.75rem; /* ruang untuk penanda (1., a., i., •) yang tampil di sisi kiri */
+  margin-block: 0.5rem; /* jarak atas-bawah list level pertama */
+}
+/* Aturan lain yang sudah ada tetap menang atas blok ini:
+   - list bergaya (✓ ✕ → –, badge) dan task list memakai "padding-left: 0"
+     karena ikonnya digambar sendiri di dalam item
+   - list bersarang memakai ".doc-lists li > ul/ol" (margin atas kecil, bawah 0) */
+
+/* Heading di dalam item list: margin dirapatkan supaya item tidak tampak renggang
+   dan penanda (angka/titik) tetap dekat dengan teksnya. */
+.doc-lists li > h1,
+.doc-lists li > h2,
+.doc-lists li > h3 {
+  margin-block: 0.25rem;
+}

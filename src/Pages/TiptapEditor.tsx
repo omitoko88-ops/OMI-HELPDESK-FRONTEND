@@ -5,6 +5,7 @@ import { docTableClasses } from './DocEditor/CustomComponents/Table/tableStyles'
 import { docStepsClasses } from './DocEditor/CustomComponents/Steps/stepsStyles'
 import { createEditorExtensions } from './DocEditor/Extentions/extensions'
 import type { TiptapEditorProps } from './DocEditor/types'
+import './DocEditor/CustomComponents/List/doc-lists.css'
 
 export const TiptapEditorHtmlOutput = ({
   initialContent = '',
@@ -39,7 +40,7 @@ export const TiptapEditorHtmlOutput = ({
       {showToolbar && <ToolbarFloating editor={editor} />}
       <EditorContent
         editor={editor}
-        className={`prose dark:prose-invert min-w-full ${docTableClasses} ${docStepsClasses} ${className}`}
+        className={`prose dark:prose-invert min-w-full doc-lists ${docTableClasses} ${docStepsClasses} ${className}`}
       />
     </div>
   )

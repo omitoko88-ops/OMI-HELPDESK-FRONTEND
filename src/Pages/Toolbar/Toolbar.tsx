@@ -1,68 +1,68 @@
-import { Editor } from '@tiptap/react'
-import { BadgeInsertButton } from './Buttons/BadgeInsertButton'
-import { SeparatorButton } from './Buttons/SeparatorButton'
-import { TipInsertButton } from './Buttons/TipInsertButton'
-import { BoldButton } from './Buttons/BoldButton'
-import { ItalicButton } from './Buttons/ItalicButton'
-import { StrikeButton } from './Buttons/StrikeButton'
-import { HeadingButtons } from './Buttons/HeadingButtons'
-import { AlignButtons } from './Buttons/AlignButtons'
-import { TableButtons } from './Buttons/TableButtons'
-import { CodeTabsInsertButton } from './Buttons/CodeTabsButton'
-import { TabsInsertButton } from './Buttons/TabsButton'
-import { PdfInsertButton } from './Buttons/PdfInsertButton'
-import { TableControls } from '../DocEditor/CustomComponents/Table/TableControls'
-import { BlockHandle } from '../DocEditor/CustomComponents/BlockWrap/BlockHandle'
-import { ComboboxInsertButton } from './Buttons/Combobox'
-import { CheckboxInsertButton } from './Buttons/CheckboxButton'
-import { StepsInsertButton } from './Buttons/StepsInsertButton'
-import { ImageInsertButton } from './Buttons/ImageInsertButton'
+// import { Editor } from '@tiptap/react'
+// import { BadgeInsertButton } from './Buttons/BadgeInsertButton'
+// import { SeparatorButton } from './Buttons/SeparatorButton'
+// import { TipInsertButton } from './Buttons/TipInsertButton'
+// import { BoldButton } from './Buttons/BoldButton'
+// import { ItalicButton } from './Buttons/ItalicButton'
+// import { StrikeButton } from './Buttons/StrikeButton'
+// import { HeadingButtons } from './Buttons/HeadingButtons'
+// import { AlignButtons } from './Buttons/AlignButtons'
+// import { TableButtons } from './Buttons/TableButtons'
+// import { CodeTabsInsertButton } from './Buttons/CodeTabsButton'
+// import { TabsInsertButton } from './Buttons/TabsButton'
+// import { PdfInsertButton } from './Buttons/PdfInsertButton'
+// import { TableControls } from '../DocEditor/CustomComponents/Table/TableControls'
+// import { BlockHandle } from '../DocEditor/CustomComponents/BlockWrap/BlockHandle'
+// import { ComboboxInsertButton } from './Buttons/Combobox'
+// import { CheckboxInsertButton } from './Buttons/CheckboxButton'
+// import { StepsInsertButton } from './Buttons/StepsInsertButton'
+// import { ImageInsertButton } from './Buttons/ImageInsertButton'
 
-type Props = { editor: Editor | null }
+// type Props = { editor: Editor | null }
 
-export const Toolbar = ({ editor }: Props) => {
-  if (!editor) return null
+// export const Toolbar = ({ editor }: Props) => {
+//   if (!editor) return null
 
-  return (
-    <div className="flex gap-2 border p-2 rounded-lg bg-muted mb-4 flex-wrap">
-      {/* COMPONENT BUTTONS */}
-      <BadgeInsertButton editor={editor} />
-      {/* <StepButton editor={editor} /> */}
-      <SeparatorButton editor={editor} />
-      <TipInsertButton editor={editor} />
+//   return (
+//     <div className="flex gap-2 border p-2 rounded-lg bg-muted mb-4 flex-wrap">
+//       {/* COMPONENT BUTTONS */}
+//       <BadgeInsertButton editor={editor} />
+//       {/* <StepButton editor={editor} /> */}
+//       <SeparatorButton editor={editor} />
+//       <TipInsertButton editor={editor} />
 
-      {/* text styles */}
-      <BoldButton editor={editor} />
-      <ItalicButton editor={editor} />
-      <StrikeButton editor={editor} />
+//       {/* text styles */}
+//       <BoldButton editor={editor} />
+//       <ItalicButton editor={editor} />
+//       <StrikeButton editor={editor} />
 
-      {/* headings */}
-      <HeadingButtons editor={editor} />
+//       {/* headings */}
+//       <HeadingButtons editor={editor} />
 
-      <ComboboxInsertButton editor={editor} />
+//       <ComboboxInsertButton editor={editor} />
 
-      <StepsInsertButton editor={editor} />
+//       <StepsInsertButton editor={editor} />
 
-      {/* alignment */}
-      <AlignButtons editor={editor} />
+//       {/* alignment */}
+//       <AlignButtons editor={editor} />
 
-      <CheckboxInsertButton editor={editor} />
+//       <CheckboxInsertButton editor={editor} />
 
-      {/* table */}
-      <TableButtons editor={editor} />
+//       {/* table */}
+//       <TableButtons editor={editor} />
 
-      {/* image */}
-      <ImageInsertButton editor={editor} />
+//       {/* image */}
+//       <ImageInsertButton editor={editor} />
 
-      <CodeTabsInsertButton editor={editor} />
+//       <CodeTabsInsertButton editor={editor} />
 
-      <TabsInsertButton editor={editor} />
+//       <TabsInsertButton editor={editor} />
 
-      <PdfInsertButton editor={editor} />
+//       <PdfInsertButton editor={editor} />
 
-      <TableControls editor={editor} />
+//       <TableControls editor={editor} />
 
-      <BlockHandle editor={editor} />
-    </div>
-  )
-}
+//       <BlockHandle editor={editor} />
+//     </div>
+//   )
+// }

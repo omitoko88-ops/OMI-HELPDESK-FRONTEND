@@ -3,6 +3,7 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import { createEditorExtensions } from '../DocEditor/Extentions/extensions'
 import { docTableClasses } from '../DocEditor/CustomComponents/Table/tableStyles'
 import { docStepsClasses } from '../DocEditor/CustomComponents/Steps/stepsStyles'
+import '../DocEditor/CustomComponents/List/doc-lists.css'
 
 interface TiptapViewerProps {
   html: string
@@ -10,7 +11,11 @@ interface TiptapViewerProps {
   showToolbar?: boolean
 }
 
-export function TiptapViewer({ html, editable = false, showToolbar = false }: TiptapViewerProps) {
+export function TiptapViewer({
+  html,
+  editable = false,
+  showToolbar = false,
+}: TiptapViewerProps) {
   const editor = useEditor({
     extensions: createEditorExtensions(),
     content: html || '',
