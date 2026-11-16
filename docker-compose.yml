@@ -1,0 +1,8 @@
+services:
+  omi_helpdesk_frontend:
+    build: .
+    container_name: omi_helpdesk_frontend
+    image: omi-helpdesk-frontend
+    restart: always
+    ports:
+      - "3000:80"
